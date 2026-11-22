@@ -1,0 +1,2271 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Học Này Học Kia — Không gian ôn tập thông minh</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+          colors: {
+            leaf: {
+              50: '#F4F7F2',
+              100: '#E7EFE3',
+              200: '#CFE0C8',
+              300: '#A9C79E',
+              400: '#7CA86E',
+              500: '#538648',
+              600: '#3B6E34',
+              700: '#2E5929',
+              800: '#244621',
+              900: '#1D391B'
+            },
+            earth: {
+              50: '#FBF8F3',
+              100: '#F4ECE0',
+              200: '#E6D6BE',
+              600: '#8F6232',
+              700: '#734D25'
+            }
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    body {
+      background-color: #F4F7F2;
+      color: #1F2E22;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+    .soft-card {
+      background: #FFFFFF;
+      border: 1px solid #DCE6D7;
+      box-shadow: 0 2px 10px rgba(36, 70, 33, 0.04);
+    }
+    .soft-card-hover {
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    }
+    .soft-card-hover:hover {
+      border-color: #A9C79E;
+      box-shadow: 0 6px 18px rgba(36, 70, 33, 0.08);
+    }
+    .option-btn {
+      transition: all 0.15s ease;
+    }
+    .option-btn:hover:not(:disabled) {
+      background-color: #F4F7F2;
+      border-color: #7CA86E;
+    }
+    .nature-hero {
+      background: linear-gradient(135deg, #2E5929 0%, #3E7238 55%, #568A4C 100%);
+    }
+    .fade-in {
+      animation: fadeIn 0.2s ease-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #EEF3EB; }
+    ::-webkit-scrollbar-thumb { background: #BDCEB6; border-radius: 999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94B18A; }
+  </style>
+</head>
+<body class="min-h-screen antialiased">
+
+  <!-- Màn hình Khóa / Đăng nhập & Kết nối -->
+  <div id="auth-screen" class="hidden min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-md soft-card rounded-2xl p-8 fade-in">
+      <div class="flex items-center gap-3 mb-6">
+        <div class="w-11 h-11 rounded-xl bg-leaf-700 text-white flex items-center justify-center shadow-sm">
+          <i data-lucide="sprout" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold text-leaf-900">Học Này Học Kia</h1>
+          <p class="text-xs text-slate-500">Không gian ôn tập cá nhân · Đồng bộ đám mây</p>
+        </div>
+      </div>
+
+      <div id="auth-cloud-box">
+        <div class="mb-4 p-3 rounded-xl bg-leaf-50 border border-leaf-200 text-xs text-leaf-800 flex items-start gap-2">
+          <i data-lucide="lock" class="w-4 h-4 mt-0.5 shrink-0 text-leaf-600"></i>
+          <span>Trang web chỉ dành riêng cho tài khoản cá nhân của bạn. Chức năng đăng ký mới đã được khóa.</span>
+        </div>
+
+        <form id="login-form" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1" for="login-email">Email</label>
+            <input id="login-email" type="email" required placeholder="ban@example.com"
+              class="w-full px-3.5 py-2.5 rounded-xl border border-leaf-200 focus:outline-none focus:ring-2 focus:ring-leaf-500 bg-white text-sm" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1" for="login-password">Mật khẩu</label>
+            <input id="login-password" type="password" required placeholder="••••••••"
+              class="w-full px-3.5 py-2.5 rounded-xl border border-leaf-200 focus:outline-none focus:ring-2 focus:ring-leaf-500 bg-white text-sm" />
+          </div>
+          <div id="login-error" class="hidden text-xs text-red-700 bg-red-50 border border-red-200 rounded-xl p-2.5"></div>
+          <button type="submit" id="login-submit-btn"
+            class="w-full py-2.5 px-4 rounded-xl bg-leaf-700 hover:bg-leaf-800 text-white font-medium text-sm transition flex items-center justify-center gap-2">
+            <i data-lucide="log-in" class="w-4 h-4"></i>
+            <span>Đăng nhập vào kho học tập</span>
+          </button>
+        </form>
+      </div>
+
+      <div id="auth-setup-toggle-wrap" class="mt-5 pt-5 border-t border-leaf-100 space-y-2.5">
+        <button type="button" id="btn-toggle-supa-config"
+          class="w-full py-2 px-3 rounded-xl border border-leaf-200 hover:bg-leaf-50 text-leaf-800 text-xs font-medium transition flex items-center justify-center gap-2">
+          <i data-lucide="database" class="w-3.5 h-3.5"></i>
+          <span>Cấu hình kết nối Supabase (URL &amp; Anon Key)</span>
+        </button>
+
+        <div id="supa-config-panel" class="hidden p-3.5 rounded-xl bg-leaf-50 border border-leaf-200 space-y-2.5">
+          <div>
+            <label class="block text-xs font-medium text-leaf-900 mb-1" for="cfg-supa-url">Supabase Project URL</label>
+            <input id="cfg-supa-url" type="url" placeholder="https://xxxxx.supabase.co"
+              class="w-full px-3 py-2 rounded-lg border border-leaf-200 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-leaf-500" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-leaf-900 mb-1" for="cfg-supa-key">Supabase Anon Public Key</label>
+            <input id="cfg-supa-key" type="password" placeholder="eyJhbGciOi..."
+              class="w-full px-3 py-2 rounded-lg border border-leaf-200 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-leaf-500" />
+          </div>
+          <button type="button" id="btn-save-supa-config"
+            class="w-full py-2 rounded-lg bg-leaf-600 hover:bg-leaf-700 text-white text-xs font-medium transition">
+            Lưu cấu hình đám mây
+          </button>
+        </div>
+
+        <button type="button" id="btn-enter-local-mode"
+          class="w-full py-2.5 px-3 rounded-xl bg-earth-100 hover:bg-earth-200 text-earth-700 text-xs font-semibold transition flex items-center justify-center gap-2">
+          <i data-lucide="leaf" class="w-4 h-4"></i>
+          <span>Trải nghiệm ngay chế độ cục bộ (dữ liệu mẫu + nhập .zip)</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Giao diện chính của ứng dụng -->
+  <div id="app-shell" class="hidden min-h-screen flex flex-col lg:flex-row">
+
+    <!-- Sidebar trái -->
+    <aside class="w-full lg:w-64 bg-white border-b lg:border-b-0 lg:border-r border-leaf-200 flex flex-col shrink-0">
+      <div class="p-5 border-b border-leaf-100 flex items-center justify-between lg:justify-start gap-3">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-leaf-700 text-white flex items-center justify-center shadow-sm">
+            <i data-lucide="sprout" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <div class="font-bold text-leaf-900 leading-tight">Học Này Học Kia</div>
+            <div id="sync-status-badge" class="text-[11px] font-medium text-leaf-600 flex items-center gap-1 mt-0.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-leaf-500 inline-block"></span>
+              <span>Chế độ cục bộ</span>
+            </div>
+          </div>
+        </div>
+        <button type="button" id="btn-mobile-menu" class="lg:hidden p-2 rounded-lg hover:bg-leaf-50 text-leaf-800">
+          <i data-lucide="menu" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <nav id="sidebar-nav" class="hidden lg:flex flex-col flex-1 p-3 space-y-1">
+        <button type="button" data-nav="dashboard" class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition">
+          <span class="flex items-center gap-2.5"><i data-lucide="sun" class="w-4 h-4"></i>Tổng quan &amp; Ôn FSRS</span>
+          <span id="nav-due-pill" class="px-2 py-0.5 text-xs rounded-full bg-leaf-100 text-leaf-800 font-semibold">0</span>
+        </button>
+        <button type="button" data-nav="library" class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition">
+          <span class="flex items-center gap-2.5"><i data-lucide="book-open" class="w-4 h-4"></i>Thư viện Môn học</span>
+          <span id="nav-decks-pill" class="px-2 py-0.5 text-xs rounded-full bg-slate-100 text-slate-600 font-medium">0</span>
+        </button>
+        <button type="button" data-nav="wrong" class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition">
+          <span class="flex items-center gap-2.5"><i data-lucide="rotate-ccw" class="w-4 h-4"></i>Kho Câu Làm Sai</span>
+          <span id="nav-wrong-pill" class="px-2 py-0.5 text-xs rounded-full bg-red-50 text-red-700 font-semibold">0</span>
+        </button>
+        <button type="button" data-nav="settings" class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition">
+          <span class="flex items-center gap-2.5"><i data-lucide="cloud" class="w-4 h-4"></i>Đám mây &amp; Sao lưu</span>
+        </button>
+
+        <div class="pt-4 mt-4 border-t border-leaf-100 px-1">
+          <button type="button" id="btn-open-import"
+            class="w-full py-2.5 px-3.5 rounded-xl bg-leaf-700 hover:bg-leaf-800 text-white text-sm font-medium shadow-sm transition flex items-center justify-center gap-2">
+            <i data-lucide="folder-plus" class="w-4 h-4"></i>
+            <span>+ Nhập bộ đề mới</span>
+          </button>
+        </div>
+
+        <div class="mt-auto pt-4 px-2">
+          <div class="p-3 rounded-xl bg-leaf-50 border border-leaf-100 text-xs text-leaf-800 space-y-1.5">
+            <div class="flex items-center justify-between font-medium">
+              <span>Dung lượng ảnh ước tính</span>
+              <span id="sidebar-storage-pct">0%</span>
+            </div>
+            <div class="w-full h-1.5 rounded-full bg-leaf-200 overflow-hidden">
+              <div id="sidebar-storage-bar" class="h-full bg-leaf-600 rounded-full transition-all" style="width: 1%;"></div>
+            </div>
+            <div id="sidebar-storage-text" class="text-[11px] text-leaf-700">0 MB / 1.000 MB</div>
+          </div>
+
+          <button type="button" id="btn-logout"
+            class="mt-2.5 w-full py-2 px-3 rounded-xl text-xs text-slate-600 hover:text-red-700 hover:bg-red-50 transition flex items-center justify-center gap-1.5">
+            <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+            <span id="btn-logout-text">Đổi chế độ / Đăng xuất</span>
+          </button>
+        </div>
+      </nav>
+    </aside>
+
+    <!-- Khu vực nội dung chính -->
+    <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+      <div class="max-w-5xl mx-auto">
+
+        <!-- VIEW 1: TỔNG QUAN & ÔN TẬP FSRS -->
+        <section id="view-dashboard" class="space-y-6 fade-in">
+          <div class="nature-hero rounded-2xl p-6 sm:p-8 text-white shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div class="space-y-2 max-w-xl">
+              <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/15 text-xs font-medium">
+                <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                <span>Thuật toán lặp lại ngắt quãng FSRS · Tất cả các môn</span>
+              </div>
+              <h2 class="text-2xl sm:text-3xl font-bold tracking-tight">Hôm nay bạn có <span id="hero-due-count">0</span> câu cần ôn</h2>
+              <p class="text-sm text-leaf-100 leading-relaxed">
+                Hệ thống tự động gom toàn bộ câu hỏi đến hạn từ tất cả các bộ đề bạn đã học, không giới hạn số câu mỗi ngày. Học tới đâu lưu ngay tới đó.
+              </p>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-3 shrink-0">
+              <button type="button" id="btn-start-fsrs-all"
+                class="px-5 py-3 rounded-xl bg-white text-leaf-800 hover:bg-leaf-50 font-semibold text-sm shadow-sm transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                <i data-lucide="play" class="w-4 h-4"></i>
+                <span>Bắt đầu ôn FSRS</span>
+              </button>
+              <button type="button" id="btn-hero-import"
+                class="px-4 py-3 rounded-xl bg-white/15 hover:bg-white/25 text-white font-medium text-sm transition flex items-center justify-center gap-2 border border-white/25">
+                <i data-lucide="upload" class="w-4 h-4"></i>
+                <span>Nhập bộ đề .zip</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="soft-card rounded-2xl p-5 flex items-center gap-4">
+              <div class="w-11 h-11 rounded-xl bg-leaf-100 text-leaf-700 flex items-center justify-center shrink-0">
+                <i data-lucide="layers" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <div class="text-xs text-slate-500 font-medium">Tổng số môn / bộ đề</div>
+                <div id="stat-subjects-decks" class="text-xl font-bold text-leaf-900 mt-0.5">0 môn · 0 đề</div>
+              </div>
+            </div>
+            <div class="soft-card rounded-2xl p-5 flex items-center gap-4">
+              <div class="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+                <i data-lucide="check-circle-2" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <div class="text-xs text-slate-500 font-medium">Câu đã đưa vào lịch FSRS</div>
+                <div id="stat-learned-q" class="text-xl font-bold text-leaf-900 mt-0.5">0 / 0 câu</div>
+              </div>
+            </div>
+            <div class="soft-card rounded-2xl p-5 flex items-center gap-4 cursor-pointer soft-card-hover" id="card-goto-wrong">
+              <div class="w-11 h-11 rounded-xl bg-red-50 text-red-700 flex items-center justify-center shrink-0">
+                <i data-lucide="alert-circle" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <div class="text-xs text-slate-500 font-medium">Kho câu làm sai</div>
+                <div id="stat-wrong-q" class="text-xl font-bold text-red-700 mt-0.5">0 câu</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="soft-card rounded-2xl p-6">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-semibold text-leaf-900 flex items-center gap-2">
+                <i data-lucide="book-marked" class="w-4 h-4 text-leaf-600"></i>
+                <span>Bộ đề gần đây</span>
+              </h3>
+              <button type="button" id="btn-see-all-library" class="text-xs font-medium text-leaf-700 hover:underline">Xem tất cả môn →</button>
+            </div>
+            <div id="dashboard-recent-decks" class="grid grid-cols-1 md:grid-cols-2 gap-3.5"></div>
+          </div>
+        </section>
+
+        <!-- VIEW 2: THƯ VIỆN MÔN HỌC -->
+        <section id="view-library" class="hidden space-y-6 fade-in">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 class="text-2xl font-bold text-leaf-900">Thư viện Môn học</h2>
+              <p class="text-sm text-slate-500 mt-0.5">Phân loại theo từng môn học. Bạn có thể tải sao lưu trọn gói cả môn về cất lên Google Drive.</p>
+            </div>
+            <div class="flex items-center gap-2.5">
+              <button type="button" id="btn-backup-all-lib"
+                class="px-3.5 py-2.5 rounded-xl bg-white border border-leaf-200 hover:bg-leaf-50 text-leaf-800 text-xs font-semibold transition flex items-center gap-2">
+                <i data-lucide="download" class="w-4 h-4"></i>
+                <span>Sao lưu tất cả môn (.zip)</span>
+              </button>
+              <button type="button" id="btn-lib-import"
+                class="px-4 py-2.5 rounded-xl bg-leaf-700 hover:bg-leaf-800 text-white text-xs font-semibold transition flex items-center gap-2">
+                <i data-lucide="folder-plus" class="w-4 h-4"></i>
+                <span>Nhập bộ đề</span>
+              </button>
+            </div>
+          </div>
+
+          <div id="library-subjects-container" class="space-y-5"></div>
+        </section>
+
+        <!-- VIEW 3: KHO CÂU LÀM SAI -->
+        <section id="view-wrong" class="hidden space-y-6 fade-in">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 class="text-2xl font-bold text-leaf-900">Kho Câu Làm Sai</h2>
+              <p class="text-sm text-slate-500 mt-0.5">Mọi câu bạn chọn sai khi học đều được lưu tự động tại đây. Làm lại đúng sẽ tự động gỡ khỏi kho câu sai.</p>
+            </div>
+            <button type="button" id="btn-practice-wrong"
+              class="px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed">
+              <i data-lucide="play" class="w-4 h-4"></i>
+              <span>Làm lại tất cả câu sai</span>
+            </button>
+          </div>
+          <div id="wrong-list-container" class="space-y-3"></div>
+        </section>
+
+        <!-- VIEW 4: ĐÁM MÂY & SAO LƯU -->
+        <section id="view-settings" class="hidden space-y-6 fade-in">
+          <div>
+            <h2 class="text-2xl font-bold text-leaf-900">Đám mây Supabase &amp; Sao lưu Google Drive</h2>
+            <p class="text-sm text-slate-500 mt-0.5">Quản lý kết nối Supabase, theo dõi dung lượng ảnh slide và tải file sao lưu trọn gói về cất Google Drive.</p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div class="soft-card rounded-2xl p-6 space-y-4">
+              <h3 class="font-semibold text-leaf-900 flex items-center gap-2">
+                <i data-lucide="hard-drive-download" class="w-4 h-4 text-leaf-600"></i>
+                <span>Sao lưu dữ liệu cất lên Google Drive</span>
+              </h3>
+              <p class="text-xs text-slate-600 leading-relaxed">
+                Tải toàn bộ câu hỏi, giải thích, ảnh chụp slide và lịch ôn FSRS thành 1 file nén <code>.zip</code> duy nhất để bạn kéo thả lưu vào Google Drive. File này có thể nhập ngược lại vào web bất cứ lúc nào.
+              </p>
+              <button type="button" id="btn-export-full-backup"
+                class="w-full py-2.5 px-4 rounded-xl bg-leaf-700 hover:bg-leaf-800 text-white text-sm font-medium transition flex items-center justify-center gap-2">
+                <i data-lucide="download" class="w-4 h-4"></i>
+                <span>Tải sao lưu toàn bộ các môn (.zip)</span>
+              </button>
+              <button type="button" id="btn-restore-backup"
+                class="w-full py-2.5 px-4 rounded-xl border border-leaf-200 hover:bg-leaf-50 text-leaf-800 text-sm font-medium transition flex items-center justify-center gap-2">
+                <i data-lucide="upload-cloud" class="w-4 h-4"></i>
+                <span>Khôi phục từ file sao lưu (.zip)</span>
+              </button>
+            </div>
+
+            <div class="soft-card rounded-2xl p-6 space-y-4">
+              <h3 class="font-semibold text-leaf-900 flex items-center gap-2">
+                <i data-lucide="database" class="w-4 h-4 text-leaf-600"></i>
+                <span>Trạng thái kết nối Supabase</span>
+              </h3>
+              <div id="settings-cloud-info" class="p-3.5 rounded-xl bg-leaf-50 border border-leaf-200 text-xs text-leaf-900 space-y-1.5"></div>
+              <div class="space-y-2.5">
+                <div>
+                  <label class="block text-xs font-medium text-slate-700 mb-1" for="set-supa-url">Supabase URL</label>
+                  <input id="set-supa-url" type="url" placeholder="https://xxxxx.supabase.co"
+                    class="w-full px-3 py-2 rounded-lg border border-leaf-200 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-leaf-500" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-slate-700 mb-1" for="set-supa-key">Supabase Anon Key</label>
+                  <input id="set-supa-key" type="password" placeholder="eyJhbGciOi..."
+                    class="w-full px-3 py-2 rounded-lg border border-leaf-200 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-leaf-500" />
+                </div>
+                <button type="button" id="btn-settings-save-supa"
+                  class="w-full py-2 rounded-xl bg-leaf-600 hover:bg-leaf-700 text-white text-xs font-semibold transition">
+                  Cập nhật cấu hình &amp; Chuyển sang đăng nhập Supabase
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- VIEW 5: MÀN HÌNH HỌC BÀI (STUDY SESSION) -->
+        <section id="view-study" class="hidden space-y-5 fade-in">
+          <div class="flex flex-wrap items-center justify-between gap-3 bg-white border border-leaf-200 rounded-2xl px-5 py-3.5">
+            <div class="flex items-center gap-3">
+              <button type="button" id="btn-exit-study"
+                class="p-2 rounded-xl hover:bg-leaf-50 text-leaf-800 transition" title="Quay lại">
+                <i data-lucide="arrow-left" class="w-5 h-5"></i>
+              </button>
+              <div>
+                <div id="study-header-subtitle" class="text-xs text-leaf-700 font-medium">Môn học</div>
+                <h2 id="study-header-title" class="font-bold text-leaf-900 text-base">Tên bộ đề</h2>
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+              <span id="study-mode-tag" class="px-2.5 py-1 rounded-full text-xs font-semibold bg-leaf-100 text-leaf-800">Lần đầu · Lâm sàng cuối bài</span>
+              <span id="study-progress-text" class="text-sm font-bold text-leaf-900">1 / 10</span>
+            </div>
+          </div>
+
+          <div class="w-full h-2 rounded-full bg-leaf-200 overflow-hidden">
+            <div id="study-progress-bar" class="h-full bg-leaf-600 transition-all duration-300" style="width: 10%;"></div>
+          </div>
+
+          <!-- Thẻ câu hỏi -->
+          <div id="study-question-card" class="soft-card rounded-2xl p-6 sm:p-8 space-y-6">
+            <div class="flex items-center justify-between gap-2">
+              <span id="q-type-badge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-leaf-100 text-leaf-800">
+                <i data-lucide="book-open" class="w-3.5 h-3.5"></i>
+                <span>Câu hỏi Lý thuyết</span>
+              </span>
+              <span id="q-deck-source" class="text-xs text-slate-400"></span>
+            </div>
+
+            <div id="q-text" class="text-base sm:text-lg font-semibold text-slate-900 leading-relaxed whitespace-pre-line"></div>
+
+            <div id="q-options" class="space-y-3"></div>
+          </div>
+
+          <!-- Khối Giải thích tức thì (Chỉ hiện sau khi chọn đáp án) -->
+          <div id="study-explanation-card" class="hidden soft-card rounded-2xl p-6 sm:p-8 space-y-6 fade-in border-l-4 border-l-leaf-600">
+            <div id="exp-verdict-banner" class="p-4 rounded-xl flex items-center gap-3 font-semibold text-sm"></div>
+
+            <!-- Ảnh chụp nguyên trang / nguyên slide -->
+            <div id="exp-slide-wrap" class="hidden space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold uppercase tracking-wider text-leaf-700 flex items-center gap-1.5">
+                  <i data-lucide="image" class="w-4 h-4"></i>
+                  <span id="exp-slide-label">Ảnh chụp tài liệu gốc</span>
+                </span>
+                <button type="button" id="btn-zoom-slide" class="text-xs font-medium text-leaf-700 hover:underline flex items-center gap-1">
+                  <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i>
+                  <span>Phóng to toàn màn hình</span>
+                </button>
+              </div>
+              <div class="rounded-xl overflow-hidden border border-leaf-200 bg-leaf-50 p-2 cursor-zoom-in" id="exp-slide-img-container">
+                <img id="exp-slide-img" src="" alt="Slide tài liệu gốc" class="w-full max-h-[420px] object-contain mx-auto rounded-lg" />
+              </div>
+            </div>
+
+            <!-- Giải thích chi tiết & Phương án nhiễu -->
+            <div class="space-y-4">
+              <div>
+                <h4 class="text-xs font-bold uppercase tracking-wider text-leaf-700 mb-1.5">Giải thích chi tiết</h4>
+                <div id="exp-summary" class="text-sm text-slate-800 leading-relaxed whitespace-pre-line"></div>
+              </div>
+
+              <div id="exp-distractors-wrap" class="space-y-2">
+                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500">Phân tích các phương án nhiễu</h4>
+                <div id="exp-distractors-list" class="space-y-2"></div>
+              </div>
+
+              <div id="exp-refs-wrap" class="hidden pt-3 border-t border-leaf-100">
+                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Nguồn tài liệu &amp; Y văn chính thống</h4>
+                <div id="exp-refs-list" class="flex flex-wrap gap-2"></div>
+              </div>
+            </div>
+
+            <!-- 4 nút đánh giá FSRS chuẩn Anki -->
+            <div class="pt-5 border-t border-leaf-100 space-y-3">
+              <div class="text-xs font-medium text-slate-600 text-center">
+                Đánh giá mức độ ghi nhớ của bạn để FSRS tự động xếp lịch ôn tập:
+              </div>
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5" id="fsrs-rating-buttons">
+                <button type="button" data-rating="1" class="fsrs-btn py-3 px-3 rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 text-red-800 transition flex flex-col items-center">
+                  <span class="font-bold text-sm">Quên</span>
+                  <span id="fsrs-hint-1" class="text-[11px] opacity-80 mt-0.5">Ôn lại sớm</span>
+                </button>
+                <button type="button" data-rating="2" class="fsrs-btn py-3 px-3 rounded-xl border border-amber-200 bg-amber-50 hover:bg-amber-100 text-amber-800 transition flex flex-col items-center">
+                  <span class="font-bold text-sm">Khó</span>
+                  <span id="fsrs-hint-2" class="text-[11px] opacity-80 mt-0.5">1 ngày</span>
+                </button>
+                <button type="button" data-rating="3" class="fsrs-btn py-3 px-3 rounded-xl border border-leaf-300 bg-leaf-100 hover:bg-leaf-200 text-leaf-900 transition flex flex-col items-center">
+                  <span class="font-bold text-sm">Tốt</span>
+                  <span id="fsrs-hint-3" class="text-[11px] opacity-80 mt-0.5">3 ngày</span>
+                </button>
+                <button type="button" data-rating="4" class="fsrs-btn py-3 px-3 rounded-xl border border-sky-200 bg-sky-50 hover:bg-sky-100 text-sky-800 transition flex flex-col items-center">
+                  <span class="font-bold text-sm">Dễ</span>
+                  <span id="fsrs-hint-4" class="text-[11px] opacity-80 mt-0.5">7 ngày</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Màn hình Hoàn thành phiên học -->
+          <div id="study-complete-card" class="hidden soft-card rounded-2xl p-8 text-center space-y-5 fade-in">
+            <div class="w-16 h-16 rounded-2xl bg-leaf-100 text-leaf-700 flex items-center justify-center mx-auto">
+              <i data-lucide="award" class="w-8 h-8"></i>
+            </div>
+            <div>
+              <h3 class="text-2xl font-bold text-leaf-900">Hoàn thành phiên học!</h3>
+              <p id="study-complete-summary" class="text-sm text-slate-600 mt-1"></p>
+            </div>
+            <div class="flex flex-wrap items-center justify-center gap-3 pt-2">
+              <button type="button" id="btn-complete-home"
+                class="px-5 py-2.5 rounded-xl bg-leaf-700 hover:bg-leaf-800 text-white text-sm font-semibold transition">
+                Về trang Tổng quan
+              </button>
+              <button type="button" id="btn-complete-retry"
+                class="px-5 py-2.5 rounded-xl border border-leaf-200 hover:bg-leaf-50 text-leaf-800 text-sm font-semibold transition">
+                Làm lại (xáo trộn đề &amp; đáp án)
+              </button>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- MODAL NHẬP BỘ ĐỀ .ZIP -->
+  <div id="import-modal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="w-full max-w-lg soft-card rounded-2xl p-6 space-y-5 fade-in bg-white">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-bold text-leaf-900 flex items-center gap-2">
+          <i data-lucide="folder-plus" class="w-5 h-5 text-leaf-600"></i>
+          <span>Nhập bộ đề mới (.zip)</span>
+        </h3>
+        <button type="button" id="btn-close-import" class="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div id="import-dropzone"
+        class="border-2 border-dashed border-leaf-300 hover:border-leaf-500 bg-leaf-50/70 rounded-2xl p-8 text-center cursor-pointer transition">
+        <input id="import-file-input" type="file" accept=".zip" class="hidden" />
+        <div class="w-12 h-12 rounded-xl bg-white border border-leaf-200 text-leaf-600 flex items-center justify-center mx-auto mb-3">
+          <i data-lucide="file-archive" class="w-6 h-6"></i>
+        </div>
+        <p class="text-sm font-semibold text-leaf-900">Bấm để chọn file .zip hoặc kéo thả vào đây</p>
+        <p class="text-xs text-slate-500 mt-1">Hỗ trợ gói bộ đề từ cú pháp <code>tạo bộ đề</code> hoặc file sao lưu môn học</p>
+      </div>
+
+      <div id="import-preview" class="hidden p-4 rounded-xl bg-leaf-50 border border-leaf-200 space-y-3 text-sm">
+        <div class="font-semibold text-leaf-900 flex items-center gap-2">
+          <i data-lucide="check-circle" class="w-4 h-4 text-leaf-600"></i>
+          <span id="import-preview-type">Đã đọc gói bộ đề hợp lệ</span>
+        </div>
+        <div class="grid grid-cols-1 gap-2.5 text-xs">
+          <div>
+            <label class="block text-slate-600 font-medium mb-1" for="import-subject-input">Môn học</label>
+            <input id="import-subject-input" type="text"
+              class="w-full px-3 py-2 rounded-lg border border-leaf-200 bg-white text-sm font-medium text-leaf-900 focus:outline-none focus:ring-2 focus:ring-leaf-500" />
+          </div>
+          <div id="import-deck-title-wrap">
+            <label class="block text-slate-600 font-medium mb-1" for="import-deck-input">Tên bộ đề</label>
+            <input id="import-deck-input" type="text"
+              class="w-full px-3 py-2 rounded-lg border border-leaf-200 bg-white text-sm font-medium text-leaf-900 focus:outline-none focus:ring-2 focus:ring-leaf-500" />
+          </div>
+        </div>
+        <div id="import-preview-stats" class="text-xs text-leaf-800 pt-1"></div>
+      </div>
+
+      <div id="import-progress-wrap" class="hidden space-y-1.5">
+        <div class="flex justify-between text-xs font-medium text-leaf-800">
+          <span id="import-progress-label">Đang tải ảnh slide và lưu bộ đề...</span>
+          <span id="import-progress-pct">0%</span>
+        </div>
+        <div class="w-full h-2 rounded-full bg-leaf-100 overflow-hidden">
+          <div id="import-progress-bar" class="h-full bg-leaf-600 transition-all" style="width: 0%;"></div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2.5 pt-2">
+        <button type="button" id="btn-cancel-import" class="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm font-medium">
+          Hủy
+        </button>
+        <button type="button" id="btn-confirm-import" disabled
+          class="px-5 py-2 rounded-xl bg-leaf-700 hover:bg-leaf-800 text-white text-sm font-semibold transition disabled:opacity-40 disabled:cursor-not-allowed">
+          Xác nhận nhập
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL PHÓNG TO ẢNH SLIDE -->
+  <div id="zoom-modal" class="hidden fixed inset-0 z-50 bg-slate-950/85 flex items-center justify-center p-4">
+    <button type="button" id="btn-close-zoom"
+      class="absolute top-4 right-4 p-2.5 rounded-full bg-white/15 hover:bg-white/25 text-white transition">
+      <i data-lucide="x" class="w-6 h-6"></i>
+    </button>
+    <div class="max-w-6xl max-h-[92vh] flex flex-col items-center gap-3">
+      <img id="zoom-img" src="" alt="Slide phóng to" class="max-w-full max-h-[84vh] object-contain rounded-xl shadow-2xl bg-white" />
+      <div id="zoom-caption" class="text-xs text-white/90 bg-black/40 px-3 py-1.5 rounded-full"></div>
+    </div>
+  </div>
+
+  <!-- MODAL XÁC NHẬN HÀNH ĐỘNG -->
+  <div id="confirm-modal" class="hidden fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
+    <div class="w-full max-w-md soft-card rounded-2xl p-6 space-y-4 bg-white fade-in">
+      <h3 id="confirm-title" class="text-base font-bold text-leaf-900">Xác nhận</h3>
+      <p id="confirm-message" class="text-sm text-slate-600 leading-relaxed"></p>
+      <div class="flex justify-end gap-2.5 pt-2">
+        <button type="button" id="btn-confirm-no" class="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm font-medium">Hủy</button>
+        <button type="button" id="btn-confirm-yes" class="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-semibold">Xác nhận</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST THÔNG BÁO -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 space-y-2 pointer-events-none"></div>
+
+  <script src="./config.js"></script>
+  <!-- File cấu hình mặc định nếu chưa điền config.js -->
+  <script>
+    window.HNHK_CONFIG = window.HNHK_CONFIG || {
+      supabaseUrl: '',
+      supabaseAnonKey: ''
+    };
+  </script>
+
+  <script>
+    // =========================================================================
+    // 1. THUẬT TOÁN FSRS (Free Spaced Repetition Scheduler - chuẩn Anki 4 mức)
+    // =========================================================================
+    const FSRS = (() => {
+      const W = [0.4072, 1.1829, 3.1262, 15.4722, 7.2102, 0.5316, 1.0651, 0.0234,
+                 1.616, 0.1544, 1.0824, 1.9813, 0.0953, 0.2975, 2.2042, 0.2407, 2.9466];
+      const DECAY = -0.5;
+      const FACTOR = 19 / 81;
+      const REQUEST_RETENTION = 0.9;
+
+      function clampD(d) { return Math.min(Math.max(d, 1), 10); }
+      function initDifficulty(rating) { return clampD(W[4] - (rating - 3) * W[5]); }
+      function initStability(rating) { return Math.max(W[rating - 1], 0.1); }
+      function forgettingCurve(elapsedDays, stability) {
+        return Math.pow(1 + FACTOR * elapsedDays / Math.max(stability, 0.1), DECAY);
+      }
+      function nextInterval(stability) {
+        const ivl = (stability / FACTOR) * (Math.pow(REQUEST_RETENTION, 1 / DECAY) - 1);
+        return Math.max(1, Math.round(ivl));
+      }
+      function nextDifficulty(d, rating) {
+        const nextD = d - W[6] * (rating - 3);
+        return clampD(W[7] * initDifficulty(3) + (1 - W[7]) * nextD);
+      }
+      function nextRecallStability(d, s, r, rating) {
+        const hardPenalty = rating === 2 ? W[15] : 1;
+        const easyBonus = rating === 4 ? W[16] : 1;
+        return s * (1 + Math.exp(W[8]) * (11 - d) * Math.pow(s, -W[9]) *
+          (Math.exp((1 - r) * W[10]) - 1) * hardPenalty * easyBonus);
+      }
+      function nextForgetStability(d, s, r) {
+        return W[11] * Math.pow(d, -W[12]) * (Math.pow(s + 1, W[13]) - 1) * Math.exp((1 - r) * W[14]);
+      }
+
+      function createNewState(questionId) {
+        return {
+          question_id: questionId,
+          stability: 0,
+          difficulty: 0,
+          reps: 0,
+          lapses: 0,
+          state: 'new',
+          due: Date.now(),
+          last_review: null
+        };
+      }
+
+      function review(prevState, rating, now = Date.now()) {
+        const st = prevState ? { ...prevState } : createNewState('');
+        const DAY_MS = 86400000;
+        let newS, newD, ivlDays, nextState;
+
+        if (!st.last_review || st.state === 'new') {
+          newD = initDifficulty(rating);
+          newS = initStability(rating);
+          if (rating === 1) {
+            nextState = 'learning';
+            return {
+              ...st, stability: newS, difficulty: newD, reps: st.reps + 1, lapses: st.lapses + 1,
+              state: nextState, last_review: now, due: now + 10 * 60 * 1000, interval_label: '10 phút'
+            };
+          }
+          ivlDays = rating === 2 ? 1 : nextInterval(newS);
+          nextState = 'review';
+        } else {
+          const elapsedDays = Math.max(0, (now - st.last_review) / DAY_MS);
+          const r = forgettingCurve(elapsedDays, st.stability);
+          newD = nextDifficulty(st.difficulty, rating);
+          if (rating === 1) {
+            newS = Math.max(0.1, nextForgetStability(st.difficulty, st.stability, r));
+            nextState = 'relearning';
+            return {
+              ...st, stability: newS, difficulty: newD, reps: st.reps + 1, lapses: st.lapses + 1,
+              state: nextState, last_review: now, due: now + 10 * 60 * 1000, interval_label: '10 phút'
+            };
+          }
+          newS = nextRecallStability(st.difficulty, st.stability, r, rating);
+          ivlDays = nextInterval(newS);
+          nextState = 'review';
+        }
+
+        return {
+          ...st,
+          stability: Number(newS.toFixed(4)),
+          difficulty: Number(newD.toFixed(4)),
+          reps: st.reps + 1,
+          lapses: st.lapses,
+          state: nextState,
+          last_review: now,
+          due: now + ivlDays * DAY_MS,
+          interval_label: formatDays(ivlDays)
+        };
+      }
+
+      function formatDays(days) {
+        if (days < 1) return '10 phút';
+        if (days < 30) return `${days} ngày`;
+        if (days < 365) return `${(days / 30).toFixed(1).replace('.0', '')} tháng`;
+        return `${(days / 365).toFixed(1).replace('.0', '')} năm`;
+      }
+
+      function previewIntervals(prevState) {
+        const now = Date.now();
+        return {
+          1: review(prevState, 1, now).interval_label,
+          2: review(prevState, 2, now).interval_label,
+          3: review(prevState, 3, now).interval_label,
+          4: review(prevState, 4, now).interval_label
+        };
+      }
+
+      return { createNewState, review, previewIntervals };
+    })();
+
+    // =========================================================================
+    // 2. DỮ LIỆU MẪU TRẢI NGHIỆM (CHẾ ĐỘ CỤC BỘ)
+    // =========================================================================
+    function makeDemoSlideSvg(title, subtitle, bullets) {
+      const lines = bullets.map((b, i) =>
+        `<text x="56" y="${195 + i * 44}" font-family="Inter, Arial, sans-serif" font-size="20" fill="#1F2E22">• ${b}</text>`
+      ).join('');
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540">
+        <rect width="960" height="540" fill="#FAFBF8"/>
+        <rect width="960" height="106" fill="#2E5929"/>
+        <text x="48" y="54" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="700" fill="#FFFFFF">${title}</text>
+        <text x="48" y="86" font-family="Inter, Arial, sans-serif" font-size="16" fill="#CFE0C8">${subtitle}</text>
+        <rect x="36" y="134" width="888" height="360" rx="14" fill="#FFFFFF" stroke="#CFE0C8" stroke-width="2"/>
+        ${lines}
+        <text x="48" y="520" font-family="Inter, Arial, sans-serif" font-size="13" fill="#64748B">Học Này Học Kia · Slide minh họa dữ liệu mẫu</text>
+      </svg>`;
+      return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+    }
+
+    const DEMO_SLIDE_1 = makeDemoSlideSvg(
+      'Slide 12: Nhóm thuốc ức chế men chuyển (ACEi) & ARB',
+      'Dược lâm sàng · Xử trí Tăng huyết áp (ESC/ESH)',
+      [
+        'ACEi (Enalapril, Perindopril, Lisinopril): ức chế chuyển Angiotensin I → II.',
+        'ACEi làm tăng Bradykinin → gây ho khan đặc trưng và nguy cơ phù mạch.',
+        'ARB (Losartan, Valsartan, Telmisartan): chẹn thụ thể AT1, ít gây ho khan.',
+        'Chống chỉ định tuyệt đối: Phụ nữ mang thai, hẹp động mạch thận 2 bên, tăng K+ máu.'
+      ]
+    );
+
+    const DEMO_SLIDE_2 = makeDemoSlideSvg(
+      'Slide 24: Tình huống lâm sàng Tăng huyết áp kèm Đái tháo đường',
+      'Ứng dụng lựa chọn thuốc đầu tay bảo vệ thận',
+      [
+        'BN tăng huyết áp kèm đái tháo đường type 2 có albumin niệu (UACR ≥ 30 mg/g).',
+        'Ưu tiên hàng đầu: ACEi hoặc ARB giúp giảm áp lực lọc cầu thận, giảm đạm niệu.',
+        'Không phối hợp đồng thời ACEi + ARB (tăng nguy cơ tăng K+ máu & suy thận cấp).',
+        'Theo dõi Creatinin huyết thanh và Kali máu sau 2–4 tuần khởi trị.'
+      ]
+    );
+
+    function createInitialDemoData() {
+      return {
+        subjects: [
+          { id: 'subj_demo_1', name: 'Dược lâm sàng (Mẫu trải nghiệm)', created_at: Date.now() }
+        ],
+        decks: [
+          {
+            id: 'deck_demo_1',
+            subject_id: 'subj_demo_1',
+            title: 'Thuốc điều trị Tăng huyết áp (Bộ đề mẫu)',
+            source_document: 'Bai_giang_Tang_huyet_ap_Demo.pdf',
+            attempt_count: 0,
+            created_at: Date.now()
+          }
+        ],
+        slides: {
+          'deck_demo_1/slide_12.svg': DEMO_SLIDE_1,
+          'deck_demo_1/slide_24.svg': DEMO_SLIDE_2
+        },
+        questions: [
+          {
+            id: 'q_demo_1',
+            deck_id: 'deck_demo_1',
+            type: 'theory',
+            order_index: 1,
+            question: 'Cơ chế chính gây ra tác dụng không mong muốn ho khan kéo dài khi sử dụng nhóm thuốc ACEi (như Enalapril, Perindopril) là gì?',
+            options: [
+              { key: 'A', text: 'Kích thích trực tiếp thụ thể AT2 trên cơ trơn phế quản gây co thắt.' },
+              { key: 'B', text: 'Ức chế giáng hóa Bradykinin và chất P, dẫn đến tích tụ tại đường hô hấp.' },
+              { key: 'C', text: 'Giảm tiết Aldosterone gây giữ nước nhẹ tại niêm mạc phế quản.' },
+              { key: 'D', text: 'Hoạt hóa phản xạ giao cảm bù trừ do giãn tiểu động mạch hệ thống.' }
+            ],
+            correct_key: 'B',
+            slide_key: 'deck_demo_1/slide_12.svg',
+            slide_label: 'Slide 12 — Nhóm thuốc ức chế men chuyển (ACEi) & ARB',
+            explanation: {
+              summary: 'Enzyme chuyển Angiotensin (ACE) đồng thời là Kininase II có nhiệm vụ giáng hóa Bradykinin. Khi dùng ACEi, Bradykinin không bị giáng hóa và tích tụ tại đường hô hấp, kích thích các đầu mút thần kinh cảm giác gây ho khan đặc trưng.',
+              distractors: {
+                A: 'Sai — ACEi làm giảm hình thành Angiotensin II nên không kích thích thụ thể AT2 theo cơ chế gây co thắt phế quản.',
+                C: 'Sai — Giảm Aldosterone dẫn đến thải Na+, giữ K+, không gây phù nề niêm mạc phế quản.',
+                D: 'Sai — Nhóm ACEi ít gây phản xạ nhịp tim nhanh giao cảm và cơ chế này không gây ho khan.'
+              },
+              references: [
+                { title: 'Slide bài giảng mẫu (Slide 12)', url: '' }
+              ]
+            }
+          },
+          {
+            id: 'q_demo_2',
+            deck_id: 'deck_demo_1',
+            type: 'theory',
+            order_index: 2,
+            question: 'Trong các tình trạng sau đây, trường hợp nào là chống chỉ định tuyệt đối đối với cả hai nhóm thuốc ACEi và ARB?',
+            options: [
+              { key: 'A', text: 'Bệnh nhân đái tháo đường type 2 có microalbumin niệu.' },
+              { key: 'B', text: 'Bệnh nhân suy tim phân suất tống máu giảm (HFrEF).' },
+              { key: 'C', text: 'Bệnh nhân hẹp động mạch thận hai bên hoặc phụ nữ đang mang thai.' },
+              { key: 'D', text: 'Bệnh nhân tăng huyết áp có tiền sử hen phế quản nhẹ.' }
+            ],
+            correct_key: 'C',
+            slide_key: 'deck_demo_1/slide_12.svg',
+            slide_label: 'Slide 12 — Nhóm thuốc ức chế men chuyển (ACEi) & ARB',
+            explanation: {
+              summary: 'ACEi và ARB gây giãn tiểu động mạch đi của cầu thận nên có thể làm tụt nhanh mức lọc cầu thận (eGFR) ở bệnh nhân hẹp động mạch thận hai bên, đồng thời gây độc tính nặng lên thận thai nhi (chống chỉ định tuyệt đối ở phụ nữ mang thai).',
+              distractors: {
+                A: 'Sai — Đây là chỉ định ưu tiên của ACEi/ARB nhằm bảo vệ thận và giảm đạm niệu.',
+                B: 'Sai — ACEi/ARB là thuốc nền tảng giúp giảm tỷ lệ tử vong trong suy tim HFrEF.',
+                D: 'Sai — Hen phế quản là thận trọng/chống chỉ định chủ yếu của chẹn beta không chọn lọc, không phải chống chỉ định tuyệt đối của ACEi/ARB.'
+              },
+              references: [
+                { title: 'Slide bài giảng mẫu (Slide 12)', url: '' }
+              ]
+            }
+          },
+          {
+            id: 'q_demo_3',
+            deck_id: 'deck_demo_1',
+            type: 'clinical',
+            order_index: 3,
+            question: '[Tình huống lâm sàng] Bệnh nhân nam 58 tuổi, tăng huyết áp (152/94 mmHg) kèm đái tháo đường type 2 và UACR = 85 mg/g. Bệnh nhân đang dùng Enalapril 10 mg/ngày được 3 tuần thì xuất hiện ho khan dai dẳng về đêm, không sốt, X-quang phổi bình thường. Hướng xử trí hợp lý nhất là gì?',
+            options: [
+              { key: 'A', text: 'Giữ nguyên Enalapril và phối hợp thêm Losartan 50 mg/ngày để tăng hiệu quả bảo vệ thận.' },
+              { key: 'B', text: 'Ngưng Enalapril và chuyển sang nhóm ARB (ví dụ: Losartan hoặc Telmisartan), tiếp tục theo dõi Kali máu và Creatinin.' },
+              { key: 'C', text: 'Ngưng Enalapril và chuyển sang chẹn beta không chọn lọc (Propranolol) để tránh ho khan.' },
+              { key: 'D', text: 'Giữ nguyên Enalapril và kê thêm thuốc giảm ho Dextromethorphan dùng hằng ngày.' }
+            ],
+            correct_key: 'B',
+            slide_key: 'deck_demo_1/slide_24.svg',
+            slide_label: 'Slide 24 — Tình huống lâm sàng Tăng huyết áp kèm Đái tháo đường',
+            explanation: {
+              summary: 'Bệnh nhân có chỉ định bắt buộc bảo vệ thận (đái tháo đường kèm albumin niệu UACR ≥ 30 mg/g) nhưng không dung nạp ACEi do ho khan do Bradykinin. Chuyển sang nhóm ARB (không ức chế giáng hóa Bradykinin) vừa giải quyết triệu chứng ho vừa duy trì lợi ích bảo vệ cầu thận.',
+              distractors: {
+                A: 'Sai — Chống chỉ định phối hợp đồng thời ACEi + ARB vì làm tăng nguy cơ tăng Kali máu, hạ huyết áp và tổn thương thận cấp mà không tăng thêm lợi ích lâm sàng.',
+                C: 'Sai — Chẹn beta không phải lựa chọn ưu tiên bảo vệ thận ở bệnh nhân đái tháo đường có albumin niệu, và dạng không chọn lọc còn có nguy cơ che lấp triệu chứng hạ đường huyết.',
+                D: 'Sai — Thuốc giảm ho thông thường hầu như không hiệu quả với ho khan do Bradykinin từ ACEi và không xử lý được nguyên nhân gốc.'
+              },
+              references: [
+                { title: 'Slide bài giảng mẫu (Slide 24)', url: '' }
+              ]
+            }
+          }
+        ],
+        fsrs: {},
+        wrong_ids: [],
+        deck_progress: {}
+      };
+    }
+
+    // =========================================================================
+    // 3. TRẠNG THÁI ỨNG DỤNG & LỚP LƯU TRỮ (LOCAL + SUPABASE CLOUD SYNC)
+    // =========================================================================
+    const LS_KEY_DATA = 'hnhk_local_data_v1';
+    const LS_KEY_CFG = 'hnhk_supabase_cfg_v1';
+
+    let mode = 'local'; // 'local' | 'supabase'
+    let supaClient = null;
+    let supaUser = null;
+    let appData = { subjects: [], decks: [], slides: {}, questions: [], fsrs: {}, wrong_ids: [], deck_progress: {} };
+    let currentView = 'dashboard';
+    let pendingImportPayload = null;
+    let confirmCallback = null;
+
+    // Phiên học hiện tại
+    let session = {
+      type: 'deck', // 'deck' | 'fsrs' | 'wrong'
+      deckId: null,
+      title: '',
+      subtitle: '',
+      modeTag: '',
+      queue: [],
+      index: 0,
+      answered: false,
+      correctCount: 0,
+      wrongCount: 0
+    };
+
+    function safeStorageGet(k) {
+      try { return localStorage.getItem(k); } catch { return null; }
+    }
+    function safeStorageSet(k, v) {
+      try { localStorage.setItem(k, v); } catch {}
+    }
+
+    function getSavedSupaConfig() {
+      if (window.HNHK_CONFIG && window.HNHK_CONFIG.supabaseUrl && window.HNHK_CONFIG.supabaseAnonKey) {
+        return { url: window.HNHK_CONFIG.supabaseUrl, key: window.HNHK_CONFIG.supabaseAnonKey };
+      }
+      const raw = safeStorageGet(LS_KEY_CFG);
+      if (!raw) return { url: '', key: '' };
+      try { return JSON.parse(raw); } catch { return { url: '', key: '' }; }
+    }
+
+    function saveSupaConfig(url, key) {
+      safeStorageSet(LS_KEY_CFG, JSON.stringify({ url: url.trim(), key: key.trim() }));
+    }
+
+    function loadLocalData() {
+      const raw = safeStorageGet(LS_KEY_DATA);
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw);
+          if (parsed && Array.isArray(parsed.subjects)) {
+            appData = { deck_progress: {}, ...parsed };
+            if (!appData.deck_progress) appData.deck_progress = {};
+            return;
+          }
+        } catch {}
+      }
+      appData = createInitialDemoData();
+      persistLocalData();
+    }
+
+    function persistLocalData() {
+      if (mode === 'local') {
+        safeStorageSet(LS_KEY_DATA, JSON.stringify(appData));
+      }
+    }
+
+    // Toast thông báo nhẹ nhàng
+    function showToast(msg, type = 'success') {
+      const container = document.getElementById('toast-container');
+      const el = document.createElement('div');
+      const colors = type === 'error'
+        ? 'bg-red-700 text-white'
+        : type === 'info'
+          ? 'bg-slate-800 text-white'
+          : 'bg-leaf-800 text-white';
+      el.className = `pointer-events-auto px-4 py-2.5 rounded-xl shadow-lg text-xs font-medium flex items-center gap-2 fade-in ${colors}`;
+      el.textContent = msg;
+      container.appendChild(el);
+      setTimeout(() => el.remove(), 3500);
+    }
+
+    function openConfirm(title, message, onYes) {
+      document.getElementById('confirm-title').textContent = title;
+      document.getElementById('confirm-message').textContent = message;
+      confirmCallback = onYes;
+      document.getElementById('confirm-modal').classList.remove('hidden');
+    }
+
+    // =========================================================================
+    // 4. ĐỒNG BỘ SUPABASE (DATABASE + STORAGE ẢNH SLIDE RIÊNG TƯ)
+    // =========================================================================
+    async function initSupabaseClient(url, key) {
+      if (!url || !key || !window.supabase) return null;
+      return window.supabase.createClient(url, key);
+    }
+
+    async function loadFromSupabase() {
+      if (!supaClient || !supaUser) return;
+      showToast('Đang đồng bộ dữ liệu từ Supabase...', 'info');
+      const [subRes, deckRes, qRes, fsrsRes, wrongRes, progRes] = await Promise.all([
+        supaClient.from('subjects').select('*').order('created_at', { ascending: true }),
+        supaClient.from('decks').select('*').order('created_at', { ascending: false }),
+        supaClient.from('questions').select('*').order('order_index', { ascending: true }),
+        supaClient.from('fsrs_states').select('*'),
+        supaClient.from('wrong_questions').select('question_id'),
+        supaClient.from('deck_progress').select('*')
+      ]);
+
+      if (subRes.error) throw subRes.error;
+      appData.subjects = subRes.data || [];
+      appData.decks = deckRes.data || [];
+      appData.questions = (qRes.data || []).map(q => ({
+        ...q,
+        options: typeof q.options === 'string' ? JSON.parse(q.options) : q.options,
+        explanation: typeof q.explanation === 'string' ? JSON.parse(q.explanation) : q.explanation
+      }));
+      appData.fsrs = {};
+      (fsrsRes.data || []).forEach(st => {
+        appData.fsrs[st.question_id] = {
+          ...st,
+          due: Number(st.due),
+          last_review: st.last_review ? Number(st.last_review) : null
+        };
+      });
+      appData.wrong_ids = (wrongRes.data || []).map(w => w.question_id);
+      appData.deck_progress = {};
+      if (progRes && !progRes.error && Array.isArray(progRes.data)) {
+        progRes.data.forEach(p => {
+          appData.deck_progress[p.deck_id] = {
+            deck_id: p.deck_id,
+            current_index: Number(p.current_index) || 0,
+            correct_count: Number(p.correct_count) || 0,
+            wrong_count: Number(p.wrong_count) || 0,
+            mode_tag: p.mode_tag || '',
+            queue_data: typeof p.queue_data === 'string' ? JSON.parse(p.queue_data) : (p.queue_data || []),
+            updated_at: Number(p.updated_at) || Date.now()
+          };
+        });
+      }
+      appData.slides = {};
+    }
+
+    async function getSlideImageUrl(slideKey) {
+      if (!slideKey) return '';
+      if (appData.slides[slideKey]) return appData.slides[slideKey];
+      if (mode === 'supabase' && supaClient && supaUser) {
+        const path = `${supaUser.id}/${slideKey}`;
+        const { data, error } = await supaClient.storage.from('slide-images').createSignedUrl(path, 3600);
+        if (!error && data && data.signedUrl) {
+          appData.slides[slideKey] = data.signedUrl;
+          return data.signedUrl;
+        }
+      }
+      return '';
+    }
+
+    async function syncFsrsState(qId, newState) {
+      appData.fsrs[qId] = newState;
+      if (mode === 'local') {
+        persistLocalData();
+        return;
+      }
+      if (supaClient && supaUser) {
+        await supaClient.from('fsrs_states').upsert({
+          user_id: supaUser.id,
+          question_id: qId,
+          stability: newState.stability,
+          difficulty: newState.difficulty,
+          reps: newState.reps,
+          lapses: newState.lapses,
+          state: newState.state,
+          due: newState.due,
+          last_review: newState.last_review
+        });
+      }
+    }
+
+    async function syncWrongQuestion(qId, isWrong) {
+      const idx = appData.wrong_ids.indexOf(qId);
+      if (isWrong && idx === -1) appData.wrong_ids.push(qId);
+      if (!isWrong && idx !== -1) appData.wrong_ids.splice(idx, 1);
+
+      if (mode === 'local') {
+        persistLocalData();
+        return;
+      }
+      if (supaClient && supaUser) {
+        if (isWrong) {
+          await supaClient.from('wrong_questions').upsert({ user_id: supaUser.id, question_id: qId });
+        } else {
+          await supaClient.from('wrong_questions').delete().eq('user_id', supaUser.id).eq('question_id', qId);
+        }
+      }
+    }
+
+    async function incrementDeckAttempt(deckId) {
+      const deck = appData.decks.find(d => d.id === deckId);
+      if (!deck) return;
+      deck.attempt_count = (deck.attempt_count || 0) + 1;
+      if (mode === 'local') {
+        persistLocalData();
+        return;
+      }
+      if (supaClient && supaUser) {
+        await supaClient.from('decks').update({ attempt_count: deck.attempt_count }).eq('id', deckId);
+      }
+    }
+
+    async function saveDeckProgress(deckId) {
+      if (!deckId || session.type !== 'deck') return;
+      const queue_data = session.queue.map(item => ({
+        qid: item.raw.id,
+        optOrder: item.mappedOptions.map(o => o.originalKey)
+      }));
+      const record = {
+        deck_id: deckId,
+        current_index: session.index,
+        correct_count: session.correctCount,
+        wrong_count: session.wrongCount,
+        mode_tag: session.modeTag,
+        queue_data,
+        updated_at: Date.now()
+      };
+      appData.deck_progress[deckId] = record;
+      if (mode === 'local') {
+        persistLocalData();
+        return;
+      }
+      if (supaClient && supaUser) {
+        try {
+          await supaClient.from('deck_progress').upsert({
+            user_id: supaUser.id,
+            ...record
+          });
+        } catch {}
+      }
+    }
+
+    async function clearDeckProgress(deckId) {
+      if (!deckId) return;
+      delete appData.deck_progress[deckId];
+      if (mode === 'local') {
+        persistLocalData();
+        return;
+      }
+      if (supaClient && supaUser) {
+        try {
+          await supaClient.from('deck_progress').delete().eq('user_id', supaUser.id).eq('deck_id', deckId);
+        } catch {}
+      }
+    }
+
+    // =========================================================================
+    // 5. XÁO TRỘN, TÍNH TOÁN THỐNG KÊ & DUNG LƯỢNG
+    // =========================================================================
+    function shuffleArray(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function getDueFsrsQuestions() {
+      const now = Date.now();
+      return appData.questions.filter(q => {
+        const st = appData.fsrs[q.id];
+        return st && st.last_review && st.due <= now;
+      });
+    }
+
+    function estimateStorageMB() {
+      let bytes = 0;
+      Object.values(appData.slides).forEach(val => {
+        if (typeof val === 'string' && val.startsWith('data:')) {
+          bytes += val.length * 0.75;
+        } else {
+          bytes += 95000; // ước lượng trung bình ~95KB/ảnh WebP trên cloud
+        }
+      });
+      const uniqueSlides = new Set(appData.questions.map(q => q.slide_key).filter(Boolean));
+      const estimatedBytes = Math.max(bytes, uniqueSlides.size * 95000);
+      return estimatedBytes / (1024 * 1024);
+    }
+
+    // =========================================================================
+    // 6. HIỂN THỊ GIAO DIỆN (RENDERERS)
+    // =========================================================================
+    function switchView(viewName) {
+      currentView = viewName;
+      ['dashboard', 'library', 'wrong', 'settings', 'study'].forEach(v => {
+        document.getElementById(`view-${v}`).classList.toggle('hidden', v !== viewName);
+      });
+      document.querySelectorAll('.nav-item').forEach(btn => {
+        const active = btn.dataset.nav === viewName;
+        btn.className = `nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition ${
+          active ? 'bg-leaf-100 text-leaf-900 font-semibold' : 'text-slate-600 hover:bg-leaf-50 hover:text-leaf-900'
+        }`;
+      });
+      renderAllMeta();
+      if (viewName === 'dashboard') renderDashboard();
+      if (viewName === 'library') renderLibrary();
+      if (viewName === 'wrong') renderWrongList();
+      if (viewName === 'settings') renderSettings();
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function renderAllMeta() {
+      const dueCount = getDueFsrsQuestions().length;
+      const wrongCount = appData.wrong_ids.length;
+      document.getElementById('nav-due-pill').textContent = dueCount;
+      document.getElementById('nav-decks-pill').textContent = appData.decks.length;
+      document.getElementById('nav-wrong-pill').textContent = wrongCount;
+
+      const mb = estimateStorageMB();
+      const pct = Math.min(100, (mb / 1000) * 100);
+      document.getElementById('sidebar-storage-pct').textContent = `${pct.toFixed(1)}%`;
+      document.getElementById('sidebar-storage-bar').style.width = `${Math.max(1, pct)}%`;
+      document.getElementById('sidebar-storage-text').textContent = `${mb.toFixed(1)} MB / 1.000 MB`;
+
+      const badge = document.getElementById('sync-status-badge');
+      if (mode === 'supabase') {
+        badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"></span><span>Supabase · ${supaUser ? supaUser.email.split('@')[0] : 'Online'}</span>`;
+      } else {
+        badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block"></span><span>Chế độ cục bộ (Demo)</span>`;
+      }
+    }
+
+    function renderDashboard() {
+      const due = getDueFsrsQuestions();
+      const learnedCount = Object.values(appData.fsrs).filter(s => s && s.last_review).length;
+
+      document.getElementById('hero-due-count').textContent = due.length;
+      document.getElementById('btn-start-fsrs-all').disabled = due.length === 0;
+      document.getElementById('stat-subjects-decks').textContent = `${appData.subjects.length} môn · ${appData.decks.length} đề`;
+      document.getElementById('stat-learned-q').textContent = `${learnedCount} / ${appData.questions.length} câu`;
+      document.getElementById('stat-wrong-q').textContent = `${appData.wrong_ids.length} câu`;
+
+      const recentWrap = document.getElementById('dashboard-recent-decks');
+      if (appData.decks.length === 0) {
+        recentWrap.innerHTML = `<div class="col-span-2 text-center py-8 text-sm text-slate-500">Chưa có bộ đề nào. Hãy bấm <strong>+ Nhập bộ đề mới</strong> để bắt đầu học.</div>`;
+        return;
+      }
+      recentWrap.innerHTML = appData.decks.slice(0, 6).map(deck => {
+        const subj = appData.subjects.find(s => s.id === deck.subject_id);
+        const qs = appData.questions.filter(q => q.deck_id === deck.id);
+        const clin = qs.filter(q => q.type === 'clinical').length;
+        const prog = appData.deck_progress[deck.id];
+        const hasProg = prog && prog.current_index > 0 && prog.current_index < qs.length;
+        const pct = hasProg ? Math.round((prog.current_index / Math.max(1, qs.length)) * 100) : 0;
+        const attemptLabel = deck.attempt_count > 0 ? `Đã học ${deck.attempt_count} lần · Xáo trộn` : 'Lần đầu · Lâm sàng cuối bài';
+        return `
+          <div class="p-4 rounded-xl border border-leaf-200 bg-leaf-50/40 soft-card-hover flex flex-col justify-between gap-3">
+            <div>
+              <div class="text-[11px] font-semibold text-leaf-700 uppercase tracking-wide">${escapeHtml(subj ? subj.name : 'Chưa phân môn')}</div>
+              <div class="font-bold text-leaf-900 mt-0.5">${escapeHtml(deck.title)}</div>
+              <div class="text-xs text-slate-500 mt-1">${qs.length} câu (${qs.length - clin} lý thuyết · ${clin} lâm sàng) · ${attemptLabel}</div>
+              ${hasProg ? `
+                <div class="mt-2.5 space-y-1">
+                  <div class="flex items-center justify-between text-[11px] font-semibold text-leaf-800">
+                    <span>Đang học dở: ${prog.current_index} / ${qs.length} câu</span>
+                    <span>${pct}%</span>
+                  </div>
+                  <div class="w-full h-1.5 rounded-full bg-leaf-200 overflow-hidden">
+                    <div class="h-full bg-leaf-600 rounded-full" style="width: ${pct}%"></div>
+                  </div>
+                </div>
+              ` : ''}
+            </div>
+            <div class="flex items-center gap-2">
+              <button type="button" data-start-deck="${deck.id}"
+                class="btn-start-deck flex-1 py-2 rounded-lg bg-leaf-700 hover:bg-leaf-800 text-white text-xs font-semibold transition flex items-center justify-center gap-1.5">
+                <i data-lucide="play" class="w-3.5 h-3.5"></i>
+                <span>${hasProg ? `Tiếp tục học (Câu ${prog.current_index + 1})` : (deck.attempt_count > 0 ? 'Làm lại bộ đề' : 'Bắt đầu học')}</span>
+              </button>
+              ${hasProg ? `
+                <button type="button" data-restart-deck="${deck.id}"
+                  class="btn-restart-deck px-3 py-2 rounded-lg border border-leaf-200 bg-white hover:bg-leaf-50 text-leaf-800 text-xs font-medium transition" title="Làm lại từ đầu">
+                  Làm lại
+                </button>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      recentWrap.querySelectorAll('.btn-start-deck').forEach(btn => {
+        btn.addEventListener('click', () => startDeckSession(btn.dataset.startDeck, false));
+      });
+      recentWrap.querySelectorAll('.btn-restart-deck').forEach(btn => {
+        btn.addEventListener('click', () => {
+          openConfirm('Làm lại từ đầu?', 'Tiến độ đang làm dở của bộ đề này sẽ được đặt lại từ câu 1. Lịch ôn FSRS và kho câu sai đã lưu vẫn giữ nguyên.', () => startDeckSession(btn.dataset.restartDeck, true));
+        });
+      });
+    }
+
+    function renderLibrary() {
+      const container = document.getElementById('library-subjects-container');
+      if (appData.subjects.length === 0) {
+        container.innerHTML = `<div class="soft-card rounded-2xl p-10 text-center text-sm text-slate-500">Chưa có môn học nào. Hãy tải file gói <code>.zip</code> vào để hệ thống tự động tạo môn học tương ứng.</div>`;
+        return;
+      }
+
+      container.innerHTML = appData.subjects.map(subj => {
+        const decks = appData.decks.filter(d => d.subject_id === subj.id);
+        const totalQ = decks.reduce((acc, d) => acc + appData.questions.filter(q => q.deck_id === d.id).length, 0);
+        const deckHtml = decks.length === 0
+          ? `<div class="text-xs text-slate-400 italic py-2">Môn này chưa có bộ đề nào.</div>`
+          : decks.map(deck => {
+              const qs = appData.questions.filter(q => q.deck_id === deck.id);
+              const clin = qs.filter(q => q.type === 'clinical').length;
+              const prog = appData.deck_progress[deck.id];
+              const hasProg = prog && prog.current_index > 0 && prog.current_index < qs.length;
+              const pct = hasProg ? Math.round((prog.current_index / Math.max(1, qs.length)) * 100) : 0;
+              return `
+                <div class="p-4 rounded-xl border border-leaf-100 bg-leaf-50/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div class="flex-1 min-w-0">
+                    <div class="font-semibold text-leaf-900 text-sm">${escapeHtml(deck.title)}</div>
+                    <div class="text-xs text-slate-500 mt-0.5">
+                      ${qs.length} câu (${qs.length - clin} lý thuyết · ${clin} lâm sàng) ·
+                      ${deck.attempt_count > 0 ? `Đã làm ${deck.attempt_count} lần` : 'Chưa làm lần nào'}
+                    </div>
+                    ${hasProg ? `
+                      <div class="mt-2 max-w-xs space-y-1">
+                        <div class="flex items-center justify-between text-[11px] font-semibold text-leaf-800">
+                          <span>Đang học dở: ${prog.current_index} / ${qs.length} câu</span>
+                          <span>${pct}%</span>
+                        </div>
+                        <div class="w-full h-1.5 rounded-full bg-leaf-200 overflow-hidden">
+                          <div class="h-full bg-leaf-600 rounded-full" style="width: ${pct}%"></div>
+                        </div>
+                      </div>
+                    ` : ''}
+                  </div>
+                  <div class="flex items-center gap-2 shrink-0">
+                    <button type="button" data-start-deck="${deck.id}"
+                      class="btn-start-deck px-3.5 py-2 rounded-lg bg-leaf-700 hover:bg-leaf-800 text-white text-xs font-semibold transition flex items-center gap-1.5">
+                      <i data-lucide="play" class="w-3.5 h-3.5"></i>
+                      <span>${hasProg ? `Tiếp tục (Câu ${prog.current_index + 1})` : (deck.attempt_count > 0 ? 'Làm lại' : 'Học bài')}</span>
+                    </button>
+                    ${hasProg ? `
+                      <button type="button" data-restart-deck="${deck.id}"
+                        class="btn-restart-deck px-3 py-2 rounded-lg border border-leaf-200 bg-white hover:bg-leaf-50 text-leaf-800 text-xs font-medium transition" title="Làm lại từ đầu">
+                        Từ đầu
+                      </button>
+                    ` : ''}
+                    <button type="button" data-del-deck="${deck.id}"
+                      class="btn-del-deck p-2 rounded-lg border border-slate-200 hover:bg-red-50 hover:text-red-700 text-slate-400 transition" title="Xóa bộ đề">
+                      <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                  </div>
+                </div>
+              `;
+            }).join('');
+
+        return `
+          <div class="soft-card rounded-2xl p-5 sm:p-6 space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-leaf-100">
+              <div>
+                <h3 class="text-lg font-bold text-leaf-900 flex items-center gap-2">
+                  <i data-lucide="folder" class="w-5 h-5 text-leaf-600"></i>
+                  <span>${escapeHtml(subj.name)}</span>
+                </h3>
+                <div class="text-xs text-slate-500 mt-0.5">${decks.length} bộ đề · ${totalQ} câu hỏi</div>
+              </div>
+              <div class="flex flex-wrap items-center gap-2">
+                <button type="button" data-backup-subj="${subj.id}"
+                  class="btn-backup-subj px-3 py-1.5 rounded-lg bg-leaf-50 border border-leaf-200 hover:bg-leaf-100 text-leaf-800 text-xs font-semibold transition flex items-center gap-1.5">
+                  <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                  <span>Tải sao lưu môn (.zip)</span>
+                </button>
+                <button type="button" data-del-subj="${subj.id}"
+                  class="btn-del-subj px-3 py-1.5 rounded-lg border border-red-200 hover:bg-red-50 text-red-700 text-xs font-medium transition flex items-center gap-1.5">
+                  <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                  <span>Xóa môn</span>
+                </button>
+              </div>
+            </div>
+            <div class="space-y-2.5">${deckHtml}</div>
+          </div>
+        `;
+      }).join('');
+
+      container.querySelectorAll('.btn-start-deck').forEach(btn =>
+        btn.addEventListener('click', () => startDeckSession(btn.dataset.startDeck, false))
+      );
+      container.querySelectorAll('.btn-restart-deck').forEach(btn =>
+        btn.addEventListener('click', () => {
+          openConfirm('Làm lại từ đầu?', 'Tiến độ đang làm dở của bộ đề này sẽ được đặt lại từ câu 1. Lịch ôn FSRS và kho câu sai đã lưu vẫn giữ nguyên.', () => startDeckSession(btn.dataset.restartDeck, true));
+        })
+      );
+      container.querySelectorAll('.btn-backup-subj').forEach(btn =>
+        btn.addEventListener('click', () => exportBackupZip(btn.dataset.backupSubj))
+      );
+      container.querySelectorAll('.btn-del-deck').forEach(btn =>
+        btn.addEventListener('click', () => {
+          const deck = appData.decks.find(d => d.id === btn.dataset.delDeck);
+          openConfirm('Xóa bộ đề này?', `Bạn chắc chắn muốn xóa bộ đề "${deck ? deck.title : ''}" cùng ảnh slide của bộ đề này không?`, () => deleteDeck(btn.dataset.delDeck));
+        })
+      );
+      container.querySelectorAll('.btn-del-subj').forEach(btn =>
+        btn.addEventListener('click', () => {
+          const subj = appData.subjects.find(s => s.id === btn.dataset.delSubj);
+          openConfirm('Xóa toàn bộ môn học?', `Hãy tải sao lưu môn "${subj ? subj.name : ''}" về Google Drive trước khi xóa để tránh mất dữ liệu. Bạn vẫn muốn xóa môn này?`, () => deleteSubject(btn.dataset.delSubj));
+        })
+      );
+    }
+
+    function renderWrongList() {
+      const wrongQs = appData.questions.filter(q => appData.wrong_ids.includes(q.id));
+      document.getElementById('btn-practice-wrong').disabled = wrongQs.length === 0;
+      const wrap = document.getElementById('wrong-list-container');
+      if (wrongQs.length === 0) {
+        wrap.innerHTML = `<div class="soft-card rounded-2xl p-10 text-center text-sm text-leaf-700">Tuyệt vời! Hiện tại bạn không còn câu làm sai nào cần xử lý.</div>`;
+        return;
+      }
+      wrap.innerHTML = wrongQs.map((q, i) => {
+        const deck = appData.decks.find(d => d.id === q.deck_id);
+        const subj = deck ? appData.subjects.find(s => s.id === deck.subject_id) : null;
+        return `
+          <div class="soft-card rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2 text-[11px] font-semibold">
+                <span class="px-2 py-0.5 rounded-full ${q.type === 'clinical' ? 'bg-earth-100 text-earth-700' : 'bg-leaf-100 text-leaf-800'}">
+                  ${q.type === 'clinical' ? 'Lâm sàng' : 'Lý thuyết'}
+                </span>
+                <span class="text-slate-500">${escapeHtml(subj ? subj.name : '')} · ${escapeHtml(deck ? deck.title : '')}</span>
+              </div>
+              <div class="text-sm font-medium text-slate-800 line-clamp-2">${i + 1}. ${escapeHtml(q.question)}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderSettings() {
+      const cfg = getSavedSupaConfig();
+      document.getElementById('set-supa-url').value = cfg.url || '';
+      document.getElementById('set-supa-key').value = cfg.key || '';
+      const info = document.getElementById('settings-cloud-info');
+      if (mode === 'supabase') {
+        info.innerHTML = `
+          <div><strong>Trạng thái:</strong> Đang đồng bộ trực tiếp với Supabase Cloud</div>
+          <div><strong>Tài khoản:</strong> ${escapeHtml(supaUser ? supaUser.email : '')}</div>
+          <div><strong>Dung lượng ảnh ước tính:</strong> ${estimateStorageMB().toFixed(1)} MB / 1.000 MB (Gói Free)</div>
+        `;
+      } else {
+        info.innerHTML = `
+          <div><strong>Trạng thái:</strong> Đang chạy Chế độ cục bộ (lưu trên trình duyệt máy này)</div>
+          <div>Để đồng bộ đám mây trên mọi máy tính, hãy nhập Supabase URL &amp; Anon Key của bạn bên dưới theo file <code>HUONG_DAN_CAI_DAT.md</code>.</div>
+        `;
+      }
+    }
+
+    // =========================================================================
+    // 7. PHIÊN HỌC BÀI (LẦN ĐẦU LÂM SÀNG CUỐI BÀI · LÀM LẠI XÁO TRỘN CÂU & A-D)
+    // =========================================================================
+    function prepareQuestionItem(q, shuffleOptions) {
+      const opts = shuffleOptions ? shuffleArray(q.options) : [...q.options];
+      const labels = ['A', 'B', 'C', 'D'];
+      const mappedOptions = opts.map((opt, idx) => ({
+        displayKey: labels[idx],
+        originalKey: opt.key,
+        text: opt.text
+      }));
+      return { raw: q, mappedOptions };
+    }
+
+    async function startDeckSession(deckId, forceRestart = false) {
+      const deck = appData.decks.find(d => d.id === deckId);
+      if (!deck) return;
+      const subj = appData.subjects.find(s => s.id === deck.subject_id);
+      const qs = appData.questions.filter(q => q.deck_id === deckId);
+      if (qs.length === 0) {
+        showToast('Bộ đề này chưa có câu hỏi nào.', 'error');
+        return;
+      }
+
+      if (forceRestart) {
+        await clearDeckProgress(deckId);
+      }
+
+      const saved = !forceRestart ? appData.deck_progress[deckId] : null;
+      if (saved && Array.isArray(saved.queue_data) && saved.current_index > 0 && saved.current_index < saved.queue_data.length) {
+        const qMap = new Map(qs.map(q => [q.id, q]));
+        const labels = ['A', 'B', 'C', 'D'];
+        const restoredQueue = [];
+        for (const entry of saved.queue_data) {
+          const rawQ = qMap.get(entry.qid);
+          if (!rawQ) continue;
+          const optMap = new Map((rawQ.options || []).map(o => [o.key, o]));
+          const orderedOpts = (entry.optOrder || []).map(k => optMap.get(k)).filter(Boolean);
+          const finalOpts = orderedOpts.length === (rawQ.options || []).length ? orderedOpts : rawQ.options;
+          restoredQueue.push({
+            raw: rawQ,
+            mappedOptions: finalOpts.map((opt, idx) => ({
+              displayKey: labels[idx],
+              originalKey: opt.key,
+              text: opt.text
+            }))
+          });
+        }
+        if (restoredQueue.length > 0 && saved.current_index < restoredQueue.length) {
+          session = {
+            type: 'deck',
+            deckId: deck.id,
+            title: deck.title,
+            subtitle: subj ? subj.name : 'Môn học',
+            modeTag: saved.mode_tag || 'Tiếp tục phiên học',
+            queue: restoredQueue,
+            index: saved.current_index,
+            answered: false,
+            correctCount: saved.correct_count || 0,
+            wrongCount: saved.wrong_count || 0
+          };
+          showToast(`Đã khôi phục tiến độ tại câu ${saved.current_index + 1}/${restoredQueue.length}!`, 'info');
+          openStudyView();
+          return;
+        }
+      }
+
+      const isFirstAttempt = !deck.attempt_count || deck.attempt_count === 0;
+      let ordered;
+      if (isFirstAttempt) {
+        // Lần đầu: Lý thuyết trước, 30% Câu hỏi lâm sàng xếp cuối bài
+        const theory = qs.filter(q => q.type !== 'clinical').sort((a, b) => a.order_index - b.order_index);
+        const clinical = qs.filter(q => q.type === 'clinical').sort((a, b) => a.order_index - b.order_index);
+        ordered = [...theory, ...clinical].map(q => prepareQuestionItem(q, false));
+      } else {
+        // Từ lần làm lại: Xáo trộn cả thứ tự câu hỏi lẫn vị trí 4 đáp án A-D
+        ordered = shuffleArray(qs).map(q => prepareQuestionItem(q, true));
+      }
+
+      session = {
+        type: 'deck',
+        deckId: deck.id,
+        title: deck.title,
+        subtitle: subj ? subj.name : 'Môn học',
+        modeTag: isFirstAttempt ? 'Lần đầu · Lâm sàng ở cuối bài' : `Làm lại lần ${deck.attempt_count + 1} · Xáo trộn câu & đáp án`,
+        queue: ordered,
+        index: 0,
+        answered: false,
+        correctCount: 0,
+        wrongCount: 0
+      };
+      openStudyView();
+    }
+
+    function startFsrsSession() {
+      const due = getDueFsrsQuestions();
+      if (due.length === 0) {
+        showToast('Không có câu nào đến hạn ôn FSRS hôm nay!', 'info');
+        return;
+      }
+      session = {
+        type: 'fsrs',
+        deckId: null,
+        title: 'Ôn tập FSRS hằng ngày',
+        subtitle: 'Tất cả các môn đã học',
+        modeTag: 'Ôn tập FSRS · Xáo trộn câu & đáp án',
+        queue: shuffleArray(due).map(q => prepareQuestionItem(q, true)),
+        index: 0,
+        answered: false,
+        correctCount: 0,
+        wrongCount: 0
+      };
+      openStudyView();
+    }
+
+    function startWrongSession() {
+      const wrongQs = appData.questions.filter(q => appData.wrong_ids.includes(q.id));
+      if (wrongQs.length === 0) return;
+      session = {
+        type: 'wrong',
+        deckId: null,
+        title: 'Ôn lại Kho Câu Làm Sai',
+        subtitle: 'Trả lời đúng sẽ tự động gỡ khỏi kho câu sai',
+        modeTag: 'Kho câu sai · Xáo trộn câu & đáp án',
+        queue: shuffleArray(wrongQs).map(q => prepareQuestionItem(q, true)),
+        index: 0,
+        answered: false,
+        correctCount: 0,
+        wrongCount: 0
+      };
+      openStudyView();
+    }
+
+    function openStudyView() {
+      switchView('study');
+      document.getElementById('study-header-title').textContent = session.title;
+      document.getElementById('study-header-subtitle').textContent = session.subtitle;
+      document.getElementById('study-mode-tag').textContent = session.modeTag;
+      document.getElementById('study-question-card').classList.remove('hidden');
+      document.getElementById('study-complete-card').classList.add('hidden');
+      renderCurrentQuestion();
+    }
+
+    function renderCurrentQuestion() {
+      if (session.index >= session.queue.length) {
+        finishStudySession();
+        return;
+      }
+      session.answered = false;
+      const item = session.queue[session.index];
+      const q = item.raw;
+      const deck = appData.decks.find(d => d.id === q.deck_id);
+
+      document.getElementById('study-progress-text').textContent = `${session.index + 1} / ${session.queue.length}`;
+      document.getElementById('study-progress-bar').style.width = `${((session.index + 1) / session.queue.length) * 100}%`;
+      document.getElementById('study-explanation-card').classList.add('hidden');
+
+      const badge = document.getElementById('q-type-badge');
+      if (q.type === 'clinical') {
+        badge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-earth-100 text-earth-700';
+        badge.innerHTML = `<i data-lucide="stethoscope" class="w-3.5 h-3.5"></i><span>Tình huống Lâm sàng</span>`;
+      } else {
+        badge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-leaf-100 text-leaf-800';
+        badge.innerHTML = `<i data-lucide="book-open" class="w-3.5 h-3.5"></i><span>Câu hỏi Lý thuyết</span>`;
+      }
+      document.getElementById('q-deck-source').textContent = deck ? deck.title : '';
+      document.getElementById('q-text').textContent = q.question;
+
+      const optWrap = document.getElementById('q-options');
+      optWrap.innerHTML = item.mappedOptions.map(opt => `
+        <button type="button" data-orig-key="${opt.originalKey}" data-disp-key="${opt.displayKey}"
+          class="option-btn w-full text-left p-4 rounded-xl border border-leaf-200 bg-white flex items-start gap-3.5">
+          <span class="w-7 h-7 rounded-lg bg-leaf-100 text-leaf-800 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">${opt.displayKey}</span>
+          <span class="text-sm text-slate-800 leading-relaxed">${escapeHtml(opt.text)}</span>
+        </button>
+      `).join('');
+
+      optWrap.querySelectorAll('.option-btn').forEach(btn => {
+        btn.addEventListener('click', () => handleSelectOption(btn.dataset.origKey, btn.dataset.dispKey));
+      });
+      if (window.lucide) lucide.createIcons();
+    }
+
+    async function handleSelectOption(selectedOrigKey, selectedDispKey) {
+      if (session.answered) return;
+      session.answered = true;
+      const item = session.queue[session.index];
+      const q = item.raw;
+      const isCorrect = selectedOrigKey === q.correct_key;
+
+      if (isCorrect) {
+        session.correctCount++;
+        if (session.type === 'wrong') {
+          await syncWrongQuestion(q.id, false);
+        }
+      } else {
+        session.wrongCount++;
+        await syncWrongQuestion(q.id, true);
+      }
+
+      // Tô màu đáp án đúng / sai
+      document.querySelectorAll('#q-options .option-btn').forEach(btn => {
+        btn.disabled = true;
+        const ok = btn.dataset.origKey === q.correct_key;
+        const picked = btn.dataset.origKey === selectedOrigKey;
+        if (ok) {
+          btn.className = 'option-btn w-full text-left p-4 rounded-xl border-2 border-emerald-600 bg-emerald-50 flex items-start gap-3.5';
+        } else if (picked && !ok) {
+          btn.className = 'option-btn w-full text-left p-4 rounded-xl border-2 border-red-500 bg-red-50 flex items-start gap-3.5';
+        } else {
+          btn.className = 'option-btn w-full text-left p-4 rounded-xl border border-slate-200 bg-slate-50/70 opacity-65 flex items-start gap-3.5';
+        }
+      });
+
+      // Hiện khối giải thích ngay lập tức
+      const correctMapped = item.mappedOptions.find(o => o.originalKey === q.correct_key);
+      const verdict = document.getElementById('exp-verdict-banner');
+      if (isCorrect) {
+        verdict.className = 'p-4 rounded-xl flex items-center gap-3 font-semibold text-sm bg-emerald-50 text-emerald-800 border border-emerald-200';
+        verdict.innerHTML = `<i data-lucide="check-circle-2" class="w-5 h-5 shrink-0"></i><span>Chính xác! Đáp án đúng là ${correctMapped ? correctMapped.displayKey : q.correct_key}.</span>`;
+      } else {
+        verdict.className = 'p-4 rounded-xl flex items-center gap-3 font-semibold text-sm bg-red-50 text-red-800 border border-red-200';
+        verdict.innerHTML = `<i data-lucide="x-circle" class="w-5 h-5 shrink-0"></i><span>Chưa chính xác (bạn chọn ${selectedDispKey}). Đáp án đúng là ${correctMapped ? correctMapped.displayKey : q.correct_key}. Câu này đã được lưu vào Kho Câu Làm Sai.</span>`;
+      }
+
+      // Ảnh chụp nguyên trang / nguyên slide
+      const slideWrap = document.getElementById('exp-slide-wrap');
+      const slideUrl = await getSlideImageUrl(q.slide_key);
+      if (slideUrl) {
+        slideWrap.classList.remove('hidden');
+        document.getElementById('exp-slide-label').textContent = q.slide_label || 'Ảnh chụp nguyên trang / slide tài liệu gốc';
+        document.getElementById('exp-slide-img').src = slideUrl;
+        document.getElementById('zoom-img').src = slideUrl;
+        document.getElementById('zoom-caption').textContent = q.slide_label || '';
+      } else {
+        slideWrap.classList.add('hidden');
+      }
+
+      // Giải thích chi tiết & Phương án nhiễu (ánh xạ đúng chữ cái hiển thị hiện tại!)
+      const exp = q.explanation || {};
+      document.getElementById('exp-summary').textContent = exp.summary || '';
+
+      const distWrap = document.getElementById('exp-distractors-wrap');
+      const distList = document.getElementById('exp-distractors-list');
+      const distEntries = item.mappedOptions
+        .filter(o => o.originalKey !== q.correct_key && exp.distractors && exp.distractors[o.originalKey]);
+      if (distEntries.length > 0) {
+        distWrap.classList.remove('hidden');
+        distList.innerHTML = distEntries.map(o => `
+          <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-700 leading-relaxed">
+            <strong class="text-slate-900">Phương án ${o.displayKey}:</strong> ${escapeHtml(exp.distractors[o.originalKey])}
+          </div>
+        `).join('');
+      } else {
+        distWrap.classList.add('hidden');
+      }
+
+      const refsWrap = document.getElementById('exp-refs-wrap');
+      const refsList = document.getElementById('exp-refs-list');
+      if (exp.references && exp.references.length > 0) {
+        refsWrap.classList.remove('hidden');
+        refsList.innerHTML = exp.references.map(r => r.url
+          ? `<a href="${escapeAttr(r.url)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-leaf-50 border border-leaf-200 text-xs text-leaf-800 hover:bg-leaf-100 transition"><i data-lucide="external-link" class="w-3 h-3"></i>${escapeHtml(r.title)}</a>`
+          : `<span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-slate-100 text-xs text-slate-700">${escapeHtml(r.title)}</span>`
+        ).join('');
+      } else {
+        refsWrap.classList.add('hidden');
+      }
+
+      // Gợi ý lịch ôn tiếp theo từ FSRS
+      const hints = FSRS.previewIntervals(appData.fsrs[q.id]);
+      document.getElementById('fsrs-hint-1').textContent = hints[1];
+      document.getElementById('fsrs-hint-2').textContent = hints[2];
+      document.getElementById('fsrs-hint-3').textContent = hints[3];
+      document.getElementById('fsrs-hint-4').textContent = hints[4];
+
+      const expCard = document.getElementById('study-explanation-card');
+      expCard.classList.remove('hidden');
+      if (window.lucide) lucide.createIcons();
+      expCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    async function handleFsrsRate(rating) {
+      const item = session.queue[session.index];
+      const q = item.raw;
+      const nextSt = FSRS.review(appData.fsrs[q.id], rating);
+      nextSt.question_id = q.id;
+      await syncFsrsState(q.id, nextSt);
+      session.index++;
+      if (session.type === 'deck' && session.deckId && session.index < session.queue.length) {
+        await saveDeckProgress(session.deckId);
+      }
+      renderAllMeta();
+      renderCurrentQuestion();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    async function finishStudySession() {
+      if (session.type === 'deck' && session.deckId) {
+        await clearDeckProgress(session.deckId);
+        await incrementDeckAttempt(session.deckId);
+      }
+      document.getElementById('study-question-card').classList.add('hidden');
+      document.getElementById('study-explanation-card').classList.add('hidden');
+      document.getElementById('study-complete-card').classList.remove('hidden');
+      document.getElementById('study-complete-summary').textContent =
+        `Bạn đã hoàn thành ${session.queue.length} câu hỏi (Đúng ${session.correctCount} · Cần ôn lại ${session.wrongCount}). Lịch ôn tập FSRS đã được cập nhật.`;
+      document.getElementById('btn-complete-retry').classList.toggle('hidden', session.type !== 'deck');
+      renderAllMeta();
+    }
+
+    // =========================================================================
+    // 8. NHẬP GÓI BỘ ĐỀ .ZIP & SAO LƯU THEO MÔN / TOÀN BỘ (.ZIP CHO GOOGLE DRIVE)
+    // =========================================================================
+    async function inspectZipFile(file) {
+      if (!file || !window.JSZip) return;
+      try {
+        const zip = await JSZip.loadAsync(file);
+        const backupFile = zip.file('backup.json');
+        const deckFile = zip.file('deck.json');
+
+        if (backupFile) {
+          const parsed = JSON.parse(await backupFile.async('string'));
+          pendingImportPayload = { kind: 'backup', zip, data: parsed };
+          document.getElementById('import-preview').classList.remove('hidden');
+          document.getElementById('import-preview-type').textContent = 'Đã nhận diện File Sao Lưu Hệ Thống (.zip)';
+          document.getElementById('import-subject-input').value = `${(parsed.subjects || []).length} môn học trong bản sao lưu`;
+          document.getElementById('import-subject-input').disabled = true;
+          document.getElementById('import-deck-title-wrap').classList.add('hidden');
+          document.getElementById('import-preview-stats').textContent =
+            `Gồm ${(parsed.decks || []).length} bộ đề · ${(parsed.questions || []).length} câu hỏi · Khôi phục cả lịch ôn FSRS & kho câu sai.`;
+          document.getElementById('btn-confirm-import').disabled = false;
+          return;
+        }
+
+        if (!deckFile) {
+          showToast('File .zip không đúng định dạng (thiếu deck.json hoặc backup.json).', 'error');
+          return;
+        }
+
+        const deckJson = JSON.parse(await deckFile.async('string'));
+        const qs = deckJson.questions || [];
+        const clin = qs.filter(q => q.type === 'clinical').length;
+        const slideFiles = Object.keys(zip.files).filter(k => k.startsWith('slides/') && !zip.files[k].dir);
+
+        pendingImportPayload = { kind: 'deck', zip, data: deckJson, slideFiles };
+        document.getElementById('import-preview').classList.remove('hidden');
+        document.getElementById('import-preview-type').textContent = 'Đã đọc gói bộ đề hợp lệ';
+        document.getElementById('import-subject-input').disabled = false;
+        document.getElementById('import-subject-input').value = deckJson.subject_name || 'Chưa phân môn';
+        document.getElementById('import-deck-title-wrap').classList.remove('hidden');
+        document.getElementById('import-deck-input').value = deckJson.deck_title || file.name.replace(/\.zip$/i, '');
+        document.getElementById('import-preview-stats').textContent =
+          `Tổng cộng ${qs.length} câu (${qs.length - clin} lý thuyết · ${clin} lâm sàng) · ${slideFiles.length} ảnh slide gốc.`;
+        document.getElementById('btn-confirm-import').disabled = false;
+      } catch (err) {
+        showToast('Không thể đọc file .zip: ' + err.message, 'error');
+      }
+    }
+
+    async function executeImport() {
+      if (!pendingImportPayload) return;
+      const progWrap = document.getElementById('import-progress-wrap');
+      const progBar = document.getElementById('import-progress-bar');
+      const progPct = document.getElementById('import-progress-pct');
+      const btnConfirm = document.getElementById('btn-confirm-import');
+      progWrap.classList.remove('hidden');
+      btnConfirm.disabled = true;
+
+      try {
+        if (pendingImportPayload.kind === 'backup') {
+          await restoreFromBackupZip(pendingImportPayload.zip, pendingImportPayload.data, (p) => {
+            progBar.style.width = `${p}%`;
+            progPct.textContent = `${p}%`;
+          });
+          showToast('Đã khôi phục dữ liệu từ file sao lưu thành công!');
+        } else {
+          const { zip, data, slideFiles } = pendingImportPayload;
+          const subjectName = document.getElementById('import-subject-input').value.trim() || 'Chưa phân môn';
+          const deckTitle = document.getElementById('import-deck-input').value.trim() || 'Bộ đề mới';
+
+          // 1. Tìm hoặc tạo Môn học
+          let subj = appData.subjects.find(s => s.name.toLowerCase() === subjectName.toLowerCase());
+          if (!subj) {
+            subj = { id: 'subj_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6), name: subjectName, created_at: Date.now() };
+            appData.subjects.push(subj);
+            if (mode === 'supabase' && supaClient && supaUser) {
+              await supaClient.from('subjects').insert({ id: subj.id, user_id: supaUser.id, name: subj.name, created_at: subj.created_at });
+            }
+          }
+
+          // 2. Tạo Bộ đề
+          const deckId = 'deck_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+          const newDeck = {
+            id: deckId,
+            subject_id: subj.id,
+            title: deckTitle,
+            source_document: data.source_document || '',
+            attempt_count: 0,
+            created_at: Date.now()
+          };
+          appData.decks.unshift(newDeck);
+          if (mode === 'supabase' && supaClient && supaUser) {
+            await supaClient.from('decks').insert({ ...newDeck, user_id: supaUser.id });
+          }
+
+          // 3. Tải từng ảnh slide (1 lần duy nhất cho mỗi slide)
+          const slideKeyMap = {};
+          for (let i = 0; i < slideFiles.length; i++) {
+            const relPath = slideFiles[i];
+            const filename = relPath.split('/').pop();
+            const storedKey = `${deckId}/${filename}`;
+            slideKeyMap[relPath] = storedKey;
+
+            if (mode === 'supabase' && supaClient && supaUser) {
+              const blob = await zip.file(relPath).async('blob');
+              await supaClient.storage.from('slide-images').upload(`${supaUser.id}/${storedKey}`, blob, { upsert: true });
+            } else {
+              const b64 = await zip.file(relPath).async('base64');
+              const ext = filename.split('.').pop().toLowerCase();
+              const mime = ext === 'png' ? 'image/png' : ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : 'image/webp';
+              appData.slides[storedKey] = `data:${mime};base64,${b64}`;
+            }
+            const pct = Math.round(((i + 1) / Math.max(1, slideFiles.length + 1)) * 85);
+            progBar.style.width = `${pct}%`;
+            progPct.textContent = `${pct}%`;
+          }
+
+          // 4. Lưu câu hỏi
+          const newQuestions = (data.questions || []).map((q, idx) => ({
+            id: `${deckId}_q_${idx + 1}`,
+            deck_id: deckId,
+            type: q.type === 'clinical' ? 'clinical' : 'theory',
+            order_index: q.order_index || idx + 1,
+            question: q.question,
+            options: q.options,
+            correct_key: q.correct_key,
+            slide_key: q.slide_image ? (slideKeyMap[q.slide_image] || '') : '',
+            slide_label: q.slide_label || '',
+            explanation: q.explanation || {}
+          }));
+          appData.questions.push(...newQuestions);
+
+          if (mode === 'supabase' && supaClient && supaUser && newQuestions.length > 0) {
+            const rows = newQuestions.map(q => ({ ...q, user_id: supaUser.id }));
+            await supaClient.from('questions').insert(rows);
+          } else {
+            persistLocalData();
+          }
+
+          progBar.style.width = '100%';
+          progPct.textContent = '100%';
+          showToast(`Đã nhập bộ đề "${deckTitle}" (${newQuestions.length} câu)!`);
+        }
+
+        closeImportModal();
+        switchView('library');
+      } catch (err) {
+        showToast('Lỗi khi nhập bộ đề: ' + err.message, 'error');
+        btnConfirm.disabled = false;
+      }
+    }
+
+    async function exportBackupZip(onlySubjectId = null) {
+      if (!window.JSZip) return;
+      showToast('Đang đóng gói file sao lưu .zip...', 'info');
+      const zip = new JSZip();
+
+      const subjects = onlySubjectId ? appData.subjects.filter(s => s.id === onlySubjectId) : appData.subjects;
+      const subjIds = new Set(subjects.map(s => s.id));
+      const decks = appData.decks.filter(d => subjIds.has(d.subject_id));
+      const deckIds = new Set(decks.map(d => d.id));
+      const questions = appData.questions.filter(q => deckIds.has(q.deck_id));
+      const qIds = new Set(questions.map(q => q.id));
+
+      const fsrs = {};
+      Object.keys(appData.fsrs).forEach(k => { if (qIds.has(k)) fsrs[k] = appData.fsrs[k]; });
+      const wrong_ids = appData.wrong_ids.filter(id => qIds.has(id));
+      const deck_progress = {};
+      Object.keys(appData.deck_progress || {}).forEach(dk => {
+        if (deckIds.has(dk)) deck_progress[dk] = appData.deck_progress[dk];
+      });
+
+      zip.file('backup.json', JSON.stringify({
+        exported_at: new Date().toISOString(),
+        subjects, decks, questions, fsrs, wrong_ids, deck_progress
+      }, null, 2));
+
+      const uniqueSlideKeys = [...new Set(questions.map(q => q.slide_key).filter(Boolean))];
+      for (const sk of uniqueSlideKeys) {
+        const url = await getSlideImageUrl(sk);
+        if (!url) continue;
+        try {
+          if (url.startsWith('data:')) {
+            const res = await fetch(url);
+            zip.file(`slides/${sk}`, await res.blob());
+          } else {
+            const res = await fetch(url);
+            if (res.ok) zip.file(`slides/${sk}`, await res.blob());
+          }
+        } catch {}
+      }
+
+      const blob = await zip.generateAsync({ type: 'blob' });
+      const namePart = onlySubjectId && subjects[0]
+        ? subjects[0].name.replace(/[^a-zA-Z0-9\u00C0-\u024F\u1E00-\u1EFF]+/g, '_')
+        : 'Tat_Ca_Cac_Mon';
+      const dateStr = new Date().toISOString().slice(0, 10);
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `HocNayHocKia_SaoLuu_${namePart}_${dateStr}.zip`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+      showToast('Đã tải xong file sao lưu .zip — bạn có thể cất thẳng lên Google Drive!');
+    }
+
+    async function restoreFromBackupZip(zip, parsed, onProg) {
+      const existingSubjIds = new Set(appData.subjects.map(s => s.id));
+      const existingDeckIds = new Set(appData.decks.map(d => d.id));
+      const existingQIds = new Set(appData.questions.map(q => q.id));
+
+      for (const s of (parsed.subjects || [])) {
+        if (!existingSubjIds.has(s.id)) {
+          appData.subjects.push(s);
+          if (mode === 'supabase' && supaClient && supaUser) {
+            await supaClient.from('subjects').upsert({ ...s, user_id: supaUser.id });
+          }
+        }
+      }
+      onProg(25);
+      for (const d of (parsed.decks || [])) {
+        if (!existingDeckIds.has(d.id)) {
+          appData.decks.push(d);
+          if (mode === 'supabase' && supaClient && supaUser) {
+            await supaClient.from('decks').upsert({ ...d, user_id: supaUser.id });
+          }
+        }
+      }
+      onProg(50);
+      const slidePaths = Object.keys(zip.files).filter(k => k.startsWith('slides/') && !zip.files[k].dir);
+      for (const sp of slidePaths) {
+        const storedKey = sp.replace(/^slides\//, '');
+        if (mode === 'supabase' && supaClient && supaUser) {
+          const blob = await zip.file(sp).async('blob');
+          await supaClient.storage.from('slide-images').upload(`${supaUser.id}/${storedKey}`, blob, { upsert: true });
+        } else {
+          const b64 = await zip.file(sp).async('base64');
+          const ext = storedKey.split('.').pop().toLowerCase();
+          const mime = ext === 'svg' ? 'image/svg+xml' : ext === 'png' ? 'image/png' : 'image/webp';
+          appData.slides[storedKey] = `data:${mime};base64,${b64}`;
+        }
+      }
+      onProg(75);
+      const toInsertQ = (parsed.questions || []).filter(q => !existingQIds.has(q.id));
+      appData.questions.push(...toInsertQ);
+      if (mode === 'supabase' && supaClient && supaUser && toInsertQ.length > 0) {
+        await supaClient.from('questions').upsert(toInsertQ.map(q => ({ ...q, user_id: supaUser.id })));
+      }
+      for (const [qid, st] of Object.entries(parsed.fsrs || {})) {
+        await syncFsrsState(qid, st);
+      }
+      for (const wid of (parsed.wrong_ids || [])) {
+        await syncWrongQuestion(wid, true);
+      }
+      for (const [dk, prog] of Object.entries(parsed.deck_progress || {})) {
+        appData.deck_progress[dk] = prog;
+        if (mode === 'supabase' && supaClient && supaUser) {
+          try {
+            await supaClient.from('deck_progress').upsert({ user_id: supaUser.id, ...prog });
+          } catch {}
+        }
+      }
+      persistLocalData();
+      onProg(100);
+    }
+
+    async function deleteDeck(deckId) {
+      const qs = appData.questions.filter(q => q.deck_id === deckId);
+      const slideKeys = [...new Set(qs.map(q => q.slide_key).filter(Boolean))];
+      const qIds = new Set(qs.map(q => q.id));
+
+      appData.decks = appData.decks.filter(d => d.id !== deckId);
+      appData.questions = appData.questions.filter(q => q.deck_id !== deckId);
+      appData.wrong_ids = appData.wrong_ids.filter(id => !qIds.has(id));
+      qIds.forEach(id => delete appData.fsrs[id]);
+      delete appData.deck_progress[deckId];
+      slideKeys.forEach(sk => delete appData.slides[sk]);
+
+      if (mode === 'supabase' && supaClient && supaUser) {
+        await supaClient.from('decks').delete().eq('id', deckId);
+        if (slideKeys.length > 0) {
+          await supaClient.storage.from('slide-images').remove(slideKeys.map(sk => `${supaUser.id}/${sk}`));
+        }
+      } else {
+        persistLocalData();
+      }
+      showToast('Đã xóa bộ đề và giải phóng dung lượng ảnh.');
+      renderAllMeta();
+      renderLibrary();
+    }
+
+    async function deleteSubject(subjId) {
+      const decks = appData.decks.filter(d => d.subject_id === subjId);
+      for (const d of decks) {
+        await deleteDeck(d.id);
+      }
+      appData.subjects = appData.subjects.filter(s => s.id !== subjId);
+      if (mode === 'supabase' && supaClient && supaUser) {
+        await supaClient.from('subjects').delete().eq('id', subjId);
+      } else {
+        persistLocalData();
+      }
+      showToast('Đã xóa môn học.');
+      renderAllMeta();
+      renderLibrary();
+    }
+
+    function openImportModal() {
+      pendingImportPayload = null;
+      document.getElementById('import-file-input').value = '';
+      document.getElementById('import-preview').classList.add('hidden');
+      document.getElementById('import-progress-wrap').classList.add('hidden');
+      document.getElementById('btn-confirm-import').disabled = true;
+      document.getElementById('import-modal').classList.remove('hidden');
+    }
+    function closeImportModal() {
+      document.getElementById('import-modal').classList.add('hidden');
+    }
+
+    function escapeHtml(str) {
+      return String(str || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+    }
+    function escapeAttr(str) {
+      return escapeHtml(str);
+    }
+
+    // =========================================================================
+    // 9. KHỞI TẠO & GẮN SỰ KIỆN
+    // =========================================================================
+    async function bootApp() {
+      const cfg = getSavedSupaConfig();
+      if (cfg.url && cfg.key) {
+        supaClient = await initSupabaseClient(cfg.url, cfg.key);
+        if (supaClient) {
+          const { data } = await supaClient.auth.getSession();
+          if (data && data.session && data.session.user) {
+            mode = 'supabase';
+            supaUser = data.session.user;
+            try { await loadFromSupabase(); } catch (e) { showToast('Lỗi đồng bộ Supabase: ' + e.message, 'error'); }
+            showMainApp();
+            return;
+          }
+          showAuthScreen();
+          return;
+        }
+      }
+      // Mặc định mở sẵn chế độ trải nghiệm cục bộ để người dùng thấy ngay giao diện & học thử
+      mode = 'local';
+      loadLocalData();
+      showMainApp();
+    }
+
+    function showAuthScreen() {
+      document.getElementById('auth-screen').classList.remove('hidden');
+      document.getElementById('app-shell').classList.add('hidden');
+      const cfg = getSavedSupaConfig();
+      const lockedByDeployConfig = Boolean(window.HNHK_CONFIG && window.HNHK_CONFIG.supabaseUrl && window.HNHK_CONFIG.supabaseAnonKey);
+      document.getElementById('cfg-supa-url').value = cfg.url || '';
+      document.getElementById('cfg-supa-key').value = cfg.key || '';
+      document.getElementById('auth-cloud-box').classList.toggle('hidden', !(cfg.url && cfg.key));
+      document.getElementById('auth-setup-toggle-wrap').classList.toggle('hidden', lockedByDeployConfig);
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function showMainApp() {
+      document.getElementById('auth-screen').classList.add('hidden');
+      document.getElementById('app-shell').classList.remove('hidden');
+      switchView('dashboard');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Navigation
+      document.querySelectorAll('.nav-item').forEach(btn => {
+        btn.addEventListener('click', () => {
+          switchView(btn.dataset.nav);
+          if (window.innerWidth < 1024) document.getElementById('sidebar-nav').classList.add('hidden');
+        });
+      });
+      document.getElementById('btn-mobile-menu').addEventListener('click', () => {
+        document.getElementById('sidebar-nav').classList.toggle('hidden');
+      });
+
+      // Dashboard & Library actions
+      document.getElementById('btn-start-fsrs-all').addEventListener('click', startFsrsSession);
+      document.getElementById('btn-see-all-library').addEventListener('click', () => switchView('library'));
+      document.getElementById('card-goto-wrong').addEventListener('click', () => switchView('wrong'));
+      document.getElementById('btn-practice-wrong').addEventListener('click', startWrongSession);
+      document.getElementById('btn-open-import').addEventListener('click', openImportModal);
+      document.getElementById('btn-hero-import').addEventListener('click', openImportModal);
+      document.getElementById('btn-lib-import').addEventListener('click', openImportModal);
+      document.getElementById('btn-restore-backup').addEventListener('click', openImportModal);
+      document.getElementById('btn-backup-all-lib').addEventListener('click', () => exportBackupZip(null));
+      document.getElementById('btn-export-full-backup').addEventListener('click', () => exportBackupZip(null));
+
+      // Study controls
+      document.getElementById('btn-exit-study').addEventListener('click', () => switchView('dashboard'));
+      document.getElementById('btn-complete-home').addEventListener('click', () => switchView('dashboard'));
+      document.getElementById('btn-complete-retry').addEventListener('click', () => {
+        if (session.deckId) startDeckSession(session.deckId, true);
+      });
+      document.querySelectorAll('.fsrs-btn').forEach(btn => {
+        btn.addEventListener('click', () => handleFsrsRate(Number(btn.dataset.rating)));
+      });
+
+      // Zoom slide modal
+      const openZoom = () => document.getElementById('zoom-modal').classList.remove('hidden');
+      document.getElementById('btn-zoom-slide').addEventListener('click', openZoom);
+      document.getElementById('exp-slide-img-container').addEventListener('click', openZoom);
+      document.getElementById('btn-close-zoom').addEventListener('click', () => document.getElementById('zoom-modal').classList.add('hidden'));
+      document.getElementById('zoom-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'zoom-modal') document.getElementById('zoom-modal').classList.add('hidden');
+      });
+
+      // Import modal
+      document.getElementById('btn-close-import').addEventListener('click', closeImportModal);
+      document.getElementById('btn-cancel-import').addEventListener('click', closeImportModal);
+      const dropzone = document.getElementById('import-dropzone');
+      const fileInput = document.getElementById('import-file-input');
+      dropzone.addEventListener('click', () => fileInput.click());
+      fileInput.addEventListener('change', (e) => { if (e.target.files[0]) inspectZipFile(e.target.files[0]); });
+      dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('border-leaf-600'); });
+      dropzone.addEventListener('dragleave', () => dropzone.classList.remove('border-leaf-600'));
+      dropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('border-leaf-600');
+        if (e.dataTransfer.files[0]) inspectZipFile(e.dataTransfer.files[0]);
+      });
+      document.getElementById('btn-confirm-import').addEventListener('click', executeImport);
+
+      // Confirm modal
+      document.getElementById('btn-confirm-no').addEventListener('click', () => {
+        document.getElementById('confirm-modal').classList.add('hidden');
+        confirmCallback = null;
+      });
+      document.getElementById('btn-confirm-yes').addEventListener('click', () => {
+        document.getElementById('confirm-modal').classList.add('hidden');
+        if (confirmCallback) confirmCallback();
+        confirmCallback = null;
+      });
+
+      // Auth & Supabase Config
+      document.getElementById('btn-toggle-supa-config').addEventListener('click', () => {
+        document.getElementById('supa-config-panel').classList.toggle('hidden');
+      });
+      document.getElementById('btn-save-supa-config').addEventListener('click', async () => {
+        const u = document.getElementById('cfg-supa-url').value.trim();
+        const k = document.getElementById('cfg-supa-key').value.trim();
+        if (!u || !k) { showToast('Vui lòng nhập đủ URL và Anon Key.', 'error'); return; }
+        saveSupaConfig(u, k);
+        supaClient = await initSupabaseClient(u, k);
+        document.getElementById('auth-cloud-box').classList.remove('hidden');
+        document.getElementById('supa-config-panel').classList.add('hidden');
+        showToast('Đã lưu cấu hình Supabase. Bạn có thể đăng nhập ngay!');
+      });
+
+      document.getElementById('btn-settings-save-supa').addEventListener('click', async () => {
+        const u = document.getElementById('set-supa-url').value.trim();
+        const k = document.getElementById('set-supa-key').value.trim();
+        if (!u || !k) { showToast('Vui lòng nhập đủ Supabase URL và Anon Key.', 'error'); return; }
+        saveSupaConfig(u, k);
+        supaClient = await initSupabaseClient(u, k);
+        showAuthScreen();
+        showToast('Đã lưu cấu hình. Hãy đăng nhập tài khoản cá nhân của bạn!');
+      });
+
+      document.getElementById('btn-enter-local-mode').addEventListener('click', () => {
+        mode = 'local';
+        loadLocalData();
+        showMainApp();
+      });
+
+      document.getElementById('login-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const errBox = document.getElementById('login-error');
+        errBox.classList.add('hidden');
+        if (!supaClient) {
+          errBox.textContent = 'Chưa có cấu hình Supabase hợp lệ.';
+          errBox.classList.remove('hidden');
+          return;
+        }
+        const email = document.getElementById('login-email').value.trim();
+        const password = document.getElementById('login-password').value;
+        const { data, error } = await supaClient.auth.signInWithPassword({ email, password });
+        if (error) {
+          errBox.textContent = 'Đăng nhập thất bại: ' + error.message;
+          errBox.classList.remove('hidden');
+          return;
+        }
+        mode = 'supabase';
+        supaUser = data.user;
+        try {
+          await loadFromSupabase();
+          showMainApp();
+          showToast('Đăng nhập & đồng bộ Supabase thành công!');
+        } catch (err) {
+          errBox.textContent = 'Lỗi tải dữ liệu (hãy kiểm tra đã chạy file supabase_schema.sql chưa): ' + err.message;
+          errBox.classList.remove('hidden');
+        }
+      });
+
+      document.getElementById('btn-logout').addEventListener('click', async () => {
+        if (mode === 'supabase' && supaClient) {
+          await supaClient.auth.signOut();
+          supaUser = null;
+        }
+        showAuthScreen();
+      });
+
+      bootApp();
+    });
+  </script>
+</body>
+</html>
