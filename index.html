@@ -882,7 +882,8 @@
           }
         ],
         fsrs: {},
-        wrong_ids: []
+        wrong_ids: [],
+        deck_progress: {}
       };
     }
 
@@ -895,7 +896,7 @@
     let mode = 'local'; // 'local' | 'supabase'
     let supaClient = null;
     let supaUser = null;
-    let appData = { subjects: [], decks: [], slides: {}, questions: [], fsrs: {}, wrong_ids: [] };
+    let appData = { subjects: [], decks: [], slides: {}, questions: [], fsrs: {}, wrong_ids: [], deck_progress: {} };
     let currentView = 'dashboard';
     let pendingImportPayload = null;
     let confirmCallback = null;
@@ -940,7 +941,8 @@
         try {
           const parsed = JSON.parse(raw);
           if (parsed && Array.isArray(parsed.subjects)) {
-            appData = parsed;
+            appData = { deck_progress: {}, ...parsed };
+            if (!appData.deck_progress) appData.deck_progress = {};
             return;
           }
         } catch {}
@@ -988,12 +990,13 @@
     async function loadFromSupabase() {
       if (!supaClient || !supaUser) return;
       showToast('Đang đồng bộ dữ liệu từ Supabase...', 'info');
-      const [subRes, deckRes, qRes, fsrsRes, wrongRes] = await Promise.all([
+      const [subRes, deckRes, qRes, fsrsRes, wrongRes, progRes] = await Promise.all([
         supaClient.from('subjects').select('*').order('created_at', { ascending: true }),
         supaClient.from('decks').select('*').order('created_at', { ascending: false }),
         supaClient.from('questions').select('*').order('order_index', { ascending: true }),
         supaClient.from('fsrs_states').select('*'),
-        supaClient.from('wrong_questions').select('question_id')
+        supaClient.from('wrong_questions').select('question_id'),
+        supaClient.from('deck_progress').select('*')
       ]);
 
       if (subRes.error) throw subRes.error;
@@ -1013,6 +1016,20 @@
         };
       });
       appData.wrong_ids = (wrongRes.data || []).map(w => w.question_id);
+      appData.deck_progress = {};
+      if (progRes && !progRes.error && Array.isArray(progRes.data)) {
+        progRes.data.forEach(p => {
+          appData.deck_progress[p.deck_id] = {
+            deck_id: p.deck_id,
+            current_index: Number(p.current_index) || 0,
+            correct_count: Number(p.correct_count) || 0,
+            wrong_count: Number(p.wrong_count) || 0,
+            mode_tag: p.mode_tag || '',
+            queue_data: typeof p.queue_data === 'string' ? JSON.parse(p.queue_data) : (p.queue_data || []),
+            updated_at: Number(p.updated_at) || Date.now()
+          };
+        });
+      }
       appData.slides = {};
     }
 
@@ -1079,6 +1096,50 @@
       }
       if (supaClient && supaUser) {
         await supaClient.from('decks').update({ attempt_count: deck.attempt_count }).eq('id', deckId);
+      }
+    }
+
+    async function saveDeckProgress(deckId) {
+      if (!deckId || session.type !== 'deck') return;
+      const queue_data = session.queue.map(item => ({
+        qid: item.raw.id,
+        optOrder: item.mappedOptions.map(o => o.originalKey)
+      }));
+      const record = {
+        deck_id: deckId,
+        current_index: session.index,
+        correct_count: session.correctCount,
+        wrong_count: session.wrongCount,
+        mode_tag: session.modeTag,
+        queue_data,
+        updated_at: Date.now()
+      };
+      appData.deck_progress[deckId] = record;
+      if (mode === 'local') {
+        persistLocalData();
+        return;
+      }
+      if (supaClient && supaUser) {
+        try {
+          await supaClient.from('deck_progress').upsert({
+            user_id: supaUser.id,
+            ...record
+          });
+        } catch {}
+      }
+    }
+
+    async function clearDeckProgress(deckId) {
+      if (!deckId) return;
+      delete appData.deck_progress[deckId];
+      if (mode === 'local') {
+        persistLocalData();
+        return;
+      }
+      if (supaClient && supaUser) {
+        try {
+          await supaClient.from('deck_progress').delete().eq('user_id', supaUser.id).eq('deck_id', deckId);
+        } catch {}
       }
     }
 
@@ -1178,6 +1239,9 @@
         const subj = appData.subjects.find(s => s.id === deck.subject_id);
         const qs = appData.questions.filter(q => q.deck_id === deck.id);
         const clin = qs.filter(q => q.type === 'clinical').length;
+        const prog = appData.deck_progress[deck.id];
+        const hasProg = prog && prog.current_index > 0 && prog.current_index < qs.length;
+        const pct = hasProg ? Math.round((prog.current_index / Math.max(1, qs.length)) * 100) : 0;
         const attemptLabel = deck.attempt_count > 0 ? `Đã học ${deck.attempt_count} lần · Xáo trộn` : 'Lần đầu · Lâm sàng cuối bài';
         return `
           <div class="p-4 rounded-xl border border-leaf-200 bg-leaf-50/40 soft-card-hover flex flex-col justify-between gap-3">
@@ -1185,18 +1249,42 @@
               <div class="text-[11px] font-semibold text-leaf-700 uppercase tracking-wide">${escapeHtml(subj ? subj.name : 'Chưa phân môn')}</div>
               <div class="font-bold text-leaf-900 mt-0.5">${escapeHtml(deck.title)}</div>
               <div class="text-xs text-slate-500 mt-1">${qs.length} câu (${qs.length - clin} lý thuyết · ${clin} lâm sàng) · ${attemptLabel}</div>
+              ${hasProg ? `
+                <div class="mt-2.5 space-y-1">
+                  <div class="flex items-center justify-between text-[11px] font-semibold text-leaf-800">
+                    <span>Đang học dở: ${prog.current_index} / ${qs.length} câu</span>
+                    <span>${pct}%</span>
+                  </div>
+                  <div class="w-full h-1.5 rounded-full bg-leaf-200 overflow-hidden">
+                    <div class="h-full bg-leaf-600 rounded-full" style="width: ${pct}%"></div>
+                  </div>
+                </div>
+              ` : ''}
             </div>
-            <button type="button" data-start-deck="${deck.id}"
-              class="btn-start-deck w-full py-2 rounded-lg bg-leaf-700 hover:bg-leaf-800 text-white text-xs font-semibold transition flex items-center justify-center gap-1.5">
-              <i data-lucide="play" class="w-3.5 h-3.5"></i>
-              <span>${deck.attempt_count > 0 ? 'Làm lại bộ đề' : 'Bắt đầu học'}</span>
-            </button>
+            <div class="flex items-center gap-2">
+              <button type="button" data-start-deck="${deck.id}"
+                class="btn-start-deck flex-1 py-2 rounded-lg bg-leaf-700 hover:bg-leaf-800 text-white text-xs font-semibold transition flex items-center justify-center gap-1.5">
+                <i data-lucide="play" class="w-3.5 h-3.5"></i>
+                <span>${hasProg ? `Tiếp tục học (Câu ${prog.current_index + 1})` : (deck.attempt_count > 0 ? 'Làm lại bộ đề' : 'Bắt đầu học')}</span>
+              </button>
+              ${hasProg ? `
+                <button type="button" data-restart-deck="${deck.id}"
+                  class="btn-restart-deck px-3 py-2 rounded-lg border border-leaf-200 bg-white hover:bg-leaf-50 text-leaf-800 text-xs font-medium transition" title="Làm lại từ đầu">
+                  Làm lại
+                </button>
+              ` : ''}
+            </div>
           </div>
         `;
       }).join('');
 
       recentWrap.querySelectorAll('.btn-start-deck').forEach(btn => {
-        btn.addEventListener('click', () => startDeckSession(btn.dataset.startDeck));
+        btn.addEventListener('click', () => startDeckSession(btn.dataset.startDeck, false));
+      });
+      recentWrap.querySelectorAll('.btn-restart-deck').forEach(btn => {
+        btn.addEventListener('click', () => {
+          openConfirm('Làm lại từ đầu?', 'Tiến độ đang làm dở của bộ đề này sẽ được đặt lại từ câu 1. Lịch ôn FSRS và kho câu sai đã lưu vẫn giữ nguyên.', () => startDeckSession(btn.dataset.restartDeck, true));
+        });
       });
     }
 
@@ -1215,21 +1303,41 @@
           : decks.map(deck => {
               const qs = appData.questions.filter(q => q.deck_id === deck.id);
               const clin = qs.filter(q => q.type === 'clinical').length;
+              const prog = appData.deck_progress[deck.id];
+              const hasProg = prog && prog.current_index > 0 && prog.current_index < qs.length;
+              const pct = hasProg ? Math.round((prog.current_index / Math.max(1, qs.length)) * 100) : 0;
               return `
                 <div class="p-4 rounded-xl border border-leaf-100 bg-leaf-50/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div>
+                  <div class="flex-1 min-w-0">
                     <div class="font-semibold text-leaf-900 text-sm">${escapeHtml(deck.title)}</div>
                     <div class="text-xs text-slate-500 mt-0.5">
                       ${qs.length} câu (${qs.length - clin} lý thuyết · ${clin} lâm sàng) ·
                       ${deck.attempt_count > 0 ? `Đã làm ${deck.attempt_count} lần` : 'Chưa làm lần nào'}
                     </div>
+                    ${hasProg ? `
+                      <div class="mt-2 max-w-xs space-y-1">
+                        <div class="flex items-center justify-between text-[11px] font-semibold text-leaf-800">
+                          <span>Đang học dở: ${prog.current_index} / ${qs.length} câu</span>
+                          <span>${pct}%</span>
+                        </div>
+                        <div class="w-full h-1.5 rounded-full bg-leaf-200 overflow-hidden">
+                          <div class="h-full bg-leaf-600 rounded-full" style="width: ${pct}%"></div>
+                        </div>
+                      </div>
+                    ` : ''}
                   </div>
                   <div class="flex items-center gap-2 shrink-0">
                     <button type="button" data-start-deck="${deck.id}"
                       class="btn-start-deck px-3.5 py-2 rounded-lg bg-leaf-700 hover:bg-leaf-800 text-white text-xs font-semibold transition flex items-center gap-1.5">
                       <i data-lucide="play" class="w-3.5 h-3.5"></i>
-                      <span>${deck.attempt_count > 0 ? 'Làm lại' : 'Học bài'}</span>
+                      <span>${hasProg ? `Tiếp tục (Câu ${prog.current_index + 1})` : (deck.attempt_count > 0 ? 'Làm lại' : 'Học bài')}</span>
                     </button>
+                    ${hasProg ? `
+                      <button type="button" data-restart-deck="${deck.id}"
+                        class="btn-restart-deck px-3 py-2 rounded-lg border border-leaf-200 bg-white hover:bg-leaf-50 text-leaf-800 text-xs font-medium transition" title="Làm lại từ đầu">
+                        Từ đầu
+                      </button>
+                    ` : ''}
                     <button type="button" data-del-deck="${deck.id}"
                       class="btn-del-deck p-2 rounded-lg border border-slate-200 hover:bg-red-50 hover:text-red-700 text-slate-400 transition" title="Xóa bộ đề">
                       <i data-lucide="trash-2" class="w-4 h-4"></i>
@@ -1268,7 +1376,12 @@
       }).join('');
 
       container.querySelectorAll('.btn-start-deck').forEach(btn =>
-        btn.addEventListener('click', () => startDeckSession(btn.dataset.startDeck))
+        btn.addEventListener('click', () => startDeckSession(btn.dataset.startDeck, false))
+      );
+      container.querySelectorAll('.btn-restart-deck').forEach(btn =>
+        btn.addEventListener('click', () => {
+          openConfirm('Làm lại từ đầu?', 'Tiến độ đang làm dở của bộ đề này sẽ được đặt lại từ câu 1. Lịch ôn FSRS và kho câu sai đã lưu vẫn giữ nguyên.', () => startDeckSession(btn.dataset.restartDeck, true));
+        })
       );
       container.querySelectorAll('.btn-backup-subj').forEach(btn =>
         btn.addEventListener('click', () => exportBackupZip(btn.dataset.backupSubj))
@@ -1347,7 +1460,7 @@
       return { raw: q, mappedOptions };
     }
 
-    function startDeckSession(deckId) {
+    async function startDeckSession(deckId, forceRestart = false) {
       const deck = appData.decks.find(d => d.id === deckId);
       if (!deck) return;
       const subj = appData.subjects.find(s => s.id === deck.subject_id);
@@ -1355,6 +1468,49 @@
       if (qs.length === 0) {
         showToast('Bộ đề này chưa có câu hỏi nào.', 'error');
         return;
+      }
+
+      if (forceRestart) {
+        await clearDeckProgress(deckId);
+      }
+
+      const saved = !forceRestart ? appData.deck_progress[deckId] : null;
+      if (saved && Array.isArray(saved.queue_data) && saved.current_index > 0 && saved.current_index < saved.queue_data.length) {
+        const qMap = new Map(qs.map(q => [q.id, q]));
+        const labels = ['A', 'B', 'C', 'D'];
+        const restoredQueue = [];
+        for (const entry of saved.queue_data) {
+          const rawQ = qMap.get(entry.qid);
+          if (!rawQ) continue;
+          const optMap = new Map((rawQ.options || []).map(o => [o.key, o]));
+          const orderedOpts = (entry.optOrder || []).map(k => optMap.get(k)).filter(Boolean);
+          const finalOpts = orderedOpts.length === (rawQ.options || []).length ? orderedOpts : rawQ.options;
+          restoredQueue.push({
+            raw: rawQ,
+            mappedOptions: finalOpts.map((opt, idx) => ({
+              displayKey: labels[idx],
+              originalKey: opt.key,
+              text: opt.text
+            }))
+          });
+        }
+        if (restoredQueue.length > 0 && saved.current_index < restoredQueue.length) {
+          session = {
+            type: 'deck',
+            deckId: deck.id,
+            title: deck.title,
+            subtitle: subj ? subj.name : 'Môn học',
+            modeTag: saved.mode_tag || 'Tiếp tục phiên học',
+            queue: restoredQueue,
+            index: saved.current_index,
+            answered: false,
+            correctCount: saved.correct_count || 0,
+            wrongCount: saved.wrong_count || 0
+          };
+          showToast(`Đã khôi phục tiến độ tại câu ${saved.current_index + 1}/${restoredQueue.length}!`, 'info');
+          openStudyView();
+          return;
+        }
       }
 
       const isFirstAttempt = !deck.attempt_count || deck.attempt_count === 0;
@@ -1579,6 +1735,9 @@
       nextSt.question_id = q.id;
       await syncFsrsState(q.id, nextSt);
       session.index++;
+      if (session.type === 'deck' && session.deckId && session.index < session.queue.length) {
+        await saveDeckProgress(session.deckId);
+      }
       renderAllMeta();
       renderCurrentQuestion();
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1586,6 +1745,7 @@
 
     async function finishStudySession() {
       if (session.type === 'deck' && session.deckId) {
+        await clearDeckProgress(session.deckId);
         await incrementDeckAttempt(session.deckId);
       }
       document.getElementById('study-question-card').classList.add('hidden');
@@ -1764,10 +1924,14 @@
       const fsrs = {};
       Object.keys(appData.fsrs).forEach(k => { if (qIds.has(k)) fsrs[k] = appData.fsrs[k]; });
       const wrong_ids = appData.wrong_ids.filter(id => qIds.has(id));
+      const deck_progress = {};
+      Object.keys(appData.deck_progress || {}).forEach(dk => {
+        if (deckIds.has(dk)) deck_progress[dk] = appData.deck_progress[dk];
+      });
 
       zip.file('backup.json', JSON.stringify({
         exported_at: new Date().toISOString(),
-        subjects, decks, questions, fsrs, wrong_ids
+        subjects, decks, questions, fsrs, wrong_ids, deck_progress
       }, null, 2));
 
       const uniqueSlideKeys = [...new Set(questions.map(q => q.slide_key).filter(Boolean))];
@@ -1846,6 +2010,14 @@
       for (const wid of (parsed.wrong_ids || [])) {
         await syncWrongQuestion(wid, true);
       }
+      for (const [dk, prog] of Object.entries(parsed.deck_progress || {})) {
+        appData.deck_progress[dk] = prog;
+        if (mode === 'supabase' && supaClient && supaUser) {
+          try {
+            await supaClient.from('deck_progress').upsert({ user_id: supaUser.id, ...prog });
+          } catch {}
+        }
+      }
       persistLocalData();
       onProg(100);
     }
@@ -1859,6 +2031,7 @@
       appData.questions = appData.questions.filter(q => q.deck_id !== deckId);
       appData.wrong_ids = appData.wrong_ids.filter(id => !qIds.has(id));
       qIds.forEach(id => delete appData.fsrs[id]);
+      delete appData.deck_progress[deckId];
       slideKeys.forEach(sk => delete appData.slides[sk]);
 
       if (mode === 'supabase' && supaClient && supaUser) {
@@ -1981,7 +2154,7 @@
       document.getElementById('btn-exit-study').addEventListener('click', () => switchView('dashboard'));
       document.getElementById('btn-complete-home').addEventListener('click', () => switchView('dashboard'));
       document.getElementById('btn-complete-retry').addEventListener('click', () => {
-        if (session.deckId) startDeckSession(session.deckId);
+        if (session.deckId) startDeckSession(session.deckId, true);
       });
       document.querySelectorAll('.fsrs-btn').forEach(btn => {
         btn.addEventListener('click', () => handleFsrsRate(Number(btn.dataset.rating)));
