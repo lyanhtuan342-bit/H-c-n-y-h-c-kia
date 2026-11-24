@@ -12,6 +12,7 @@
   <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     tailwind.config = {
       theme: {
@@ -197,11 +198,16 @@
           <span class="flex items-center gap-2.5"><i data-lucide="cloud" class="w-4 h-4"></i>Đám mây &amp; Sao lưu</span>
         </button>
 
-        <div class="pt-4 mt-4 border-t border-leaf-100 px-1">
+        <div class="pt-4 mt-4 border-t border-leaf-100 px-1 space-y-2">
           <button type="button" id="btn-open-import"
             class="w-full py-2.5 px-3.5 rounded-xl bg-leaf-700 hover:bg-leaf-800 text-white text-sm font-medium shadow-sm transition flex items-center justify-center gap-2">
             <i data-lucide="folder-plus" class="w-4 h-4"></i>
             <span>+ Nhập bộ đề mới</span>
+          </button>
+          <button type="button" id="btn-open-gdrive"
+            class="w-full py-2.5 px-3.5 rounded-xl border border-leaf-200 bg-leaf-50 hover:bg-leaf-100 text-leaf-800 text-sm font-medium transition flex items-center justify-center gap-2">
+            <i data-lucide="hard-drive" class="w-4 h-4"></i>
+            <span>Đồng bộ Google Drive</span>
           </button>
         </div>
 
@@ -253,6 +259,11 @@
                 class="px-4 py-3 rounded-xl bg-white/15 hover:bg-white/25 text-white font-medium text-sm transition flex items-center justify-center gap-2 border border-white/25">
                 <i data-lucide="upload" class="w-4 h-4"></i>
                 <span>Nhập bộ đề .zip</span>
+              </button>
+              <button type="button" id="btn-hero-gdrive"
+                class="px-4 py-3 rounded-xl bg-white/15 hover:bg-white/25 text-white font-medium text-sm transition flex items-center justify-center gap-2 border border-white/25">
+                <i data-lucide="hard-drive" class="w-4 h-4"></i>
+                <span>Đồng bộ Drive</span>
               </button>
             </div>
           </div>
@@ -389,6 +400,45 @@
                   Cập nhật cấu hình &amp; Chuyển sang đăng nhập Supabase
                 </button>
               </div>
+            </div>
+          </div>
+
+          <div class="soft-card rounded-2xl p-6 space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <h3 class="font-semibold text-leaf-900 flex items-center gap-2">
+                <i data-lucide="hard-drive" class="w-4 h-4 text-leaf-600"></i>
+                <span>Kết nối Google Drive (Quyền chỉ đọc)</span>
+              </h3>
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-leaf-50 border border-leaf-200 text-[11px] font-semibold text-leaf-800">
+                <i data-lucide="shield-check" class="w-3.5 h-3.5 text-leaf-600"></i>
+                <span>drive.readonly · Không chỉnh sửa/xóa file gốc</span>
+              </span>
+            </div>
+            <p class="text-xs text-slate-600 leading-relaxed">
+              Quét trực tiếp các gói <code>.zip</code> trong thư mục <strong>học này học kia</strong> trên Google Drive để nạp thẳng vào Supabase mà không cần tải file về máy.
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1" for="set-gdrive-client-id">Google OAuth Client ID</label>
+                <input id="set-gdrive-client-id" type="text" placeholder="1234567890-xxxx.apps.googleusercontent.com"
+                  class="w-full px-3 py-2 rounded-lg border border-leaf-200 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-leaf-500" />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1" for="set-gdrive-folder-id">Google Drive Folder ID (thư mục học này học kia)</label>
+                <input id="set-gdrive-folder-id" type="text" placeholder="127b0WVTwULripn9qEKVO_OjPVp73DSfJ"
+                  class="w-full px-3 py-2 rounded-lg border border-leaf-200 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-leaf-500" />
+              </div>
+            </div>
+            <div class="flex flex-wrap items-center gap-2.5">
+              <button type="button" id="btn-settings-save-gdrive"
+                class="px-4 py-2 rounded-xl bg-leaf-700 hover:bg-leaf-800 text-white text-xs font-semibold transition">
+                Lưu cấu hình Google Drive
+              </button>
+              <button type="button" id="btn-settings-open-gdrive"
+                class="px-4 py-2 rounded-xl border border-leaf-200 hover:bg-leaf-50 text-leaf-800 text-xs font-semibold transition flex items-center gap-1.5">
+                <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                <span>Mở đồng bộ Drive ngay</span>
+              </button>
             </div>
           </div>
         </section>
@@ -587,6 +637,74 @@
     </div>
   </div>
 
+  <!-- MODAL ĐỒNG BỘ TỪ GOOGLE DRIVE (CHỈ ĐỌC) -->
+  <div id="gdrive-modal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="w-full max-w-2xl soft-card rounded-2xl p-6 space-y-4 fade-in bg-white max-h-[90vh] flex flex-col">
+      <div class="flex items-center justify-between gap-3">
+        <div>
+          <h3 class="text-lg font-bold text-leaf-900 flex items-center gap-2">
+            <i data-lucide="hard-drive" class="w-5 h-5 text-leaf-600"></i>
+            <span>Đồng bộ từ Google Drive</span>
+          </h3>
+          <p class="text-xs text-slate-500 mt-0.5">Thư mục <strong>học này học kia</strong> · Quyền chỉ đọc (<code>drive.readonly</code>)</p>
+        </div>
+        <button type="button" id="btn-close-gdrive" class="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Khung cấu hình nhanh nếu chưa có Google OAuth Client ID -->
+      <div id="gdrive-setup-box" class="hidden p-4 rounded-xl bg-earth-50 border border-earth-200 space-y-3 text-xs">
+        <div class="font-semibold text-earth-700 flex items-center gap-1.5">
+          <i data-lucide="key-round" class="w-4 h-4"></i>
+          <span>Cần nhập Google OAuth Client ID (1 lần duy nhất)</span>
+        </div>
+        <p class="text-slate-600 leading-relaxed">
+          Dán <strong>OAuth Client ID</strong> từ Google Cloud Console vào ô dưới đây để web có thể đọc danh sách file <code>.zip</code> trong thư mục <strong>học này học kia</strong>.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-2">
+          <input id="gdrive-modal-client-id" type="text" placeholder="1234567890-xxxx.apps.googleusercontent.com"
+            class="flex-1 px-3 py-2 rounded-lg border border-leaf-200 bg-white text-xs focus:outline-none focus:ring-2 focus:ring-leaf-500" />
+          <button type="button" id="btn-gdrive-save-connect"
+            class="px-4 py-2 rounded-lg bg-leaf-700 hover:bg-leaf-800 text-white font-semibold transition shrink-0">
+            Lưu &amp; Kết nối Drive
+          </button>
+        </div>
+      </div>
+
+      <!-- Thanh trạng thái & hành động -->
+      <div id="gdrive-toolbar" class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-leaf-100">
+        <div id="gdrive-status-text" class="text-xs text-slate-600">Bấm nút để kết nối và quét file .zip trong thư mục.</div>
+        <div class="flex items-center gap-2">
+          <button type="button" id="btn-gdrive-refresh"
+            class="px-3 py-1.5 rounded-lg border border-leaf-200 hover:bg-leaf-50 text-leaf-800 text-xs font-semibold transition flex items-center gap-1.5">
+            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+            <span>Quét lại Drive</span>
+          </button>
+          <button type="button" id="btn-gdrive-import-all" disabled
+            class="px-3.5 py-1.5 rounded-lg bg-leaf-700 hover:bg-leaf-800 text-white text-xs font-semibold transition flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed">
+            <i data-lucide="download-cloud" class="w-3.5 h-3.5"></i>
+            <span>Nhập tất cả file mới</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Thanh tiến trình đồng bộ Drive -->
+      <div id="gdrive-progress-wrap" class="hidden space-y-1.5">
+        <div class="flex justify-between text-xs font-medium text-leaf-800">
+          <span id="gdrive-progress-label">Đang tải file từ Google Drive...</span>
+          <span id="gdrive-progress-pct">0%</span>
+        </div>
+        <div class="w-full h-2 rounded-full bg-leaf-100 overflow-hidden">
+          <div id="gdrive-progress-bar" class="h-full bg-leaf-600 transition-all" style="width: 0%;"></div>
+        </div>
+      </div>
+
+      <!-- Danh sách file .zip trong thư mục -->
+      <div id="gdrive-file-list" class="flex-1 overflow-y-auto space-y-2.5 min-h-[160px] pr-1"></div>
+    </div>
+  </div>
+
   <!-- MODAL PHÓNG TO ẢNH SLIDE -->
   <div id="zoom-modal" class="hidden fixed inset-0 z-50 bg-slate-950/85 flex items-center justify-center p-4">
     <button type="button" id="btn-close-zoom"
@@ -619,7 +737,9 @@
   <script>
     window.HNHK_CONFIG = window.HNHK_CONFIG || {
       supabaseUrl: '',
-      supabaseAnonKey: ''
+      supabaseAnonKey: '',
+      googleDriveClientId: '',
+      googleDriveFolderId: '127b0WVTwULripn9qEKVO_OjPVp73DSfJ'
     };
   </script>
 
@@ -892,6 +1012,11 @@
     // =========================================================================
     const LS_KEY_DATA = 'hnhk_local_data_v1';
     const LS_KEY_CFG = 'hnhk_supabase_cfg_v1';
+    const LS_KEY_GDRIVE_CFG = 'hnhk_gdrive_cfg_v1';
+    const LS_KEY_GDRIVE_IMPORTED = 'hnhk_gdrive_imported_v1';
+    const DEFAULT_GDRIVE_FOLDER_ID = '127b0WVTwULripn9qEKVO_OjPVp73DSfJ';
+    let gdriveAccessToken = '';
+    let gdriveFilesCache = [];
 
     let mode = 'local'; // 'local' | 'supabase'
     let supaClient = null;
@@ -1431,6 +1556,9 @@
       const cfg = getSavedSupaConfig();
       document.getElementById('set-supa-url').value = cfg.url || '';
       document.getElementById('set-supa-key').value = cfg.key || '';
+      const gdCfg = getSavedGDriveConfig();
+      document.getElementById('set-gdrive-client-id').value = gdCfg.clientId || '';
+      document.getElementById('set-gdrive-folder-id').value = gdCfg.folderId || DEFAULT_GDRIVE_FOLDER_ID;
       const info = document.getElementById('settings-cloud-info');
       if (mode === 'supabase') {
         info.innerHTML = `
@@ -2083,6 +2211,310 @@
     }
 
     // =========================================================================
+    // 8B. ĐỒNG BỘ GOOGLE DRIVE (CHỈ ĐỌC drive.readonly)
+    // =========================================================================
+    function getSavedGDriveConfig() {
+      const deployClientId = (window.HNHK_CONFIG && window.HNHK_CONFIG.googleDriveClientId) || '';
+      const deployFolderId = (window.HNHK_CONFIG && window.HNHK_CONFIG.googleDriveFolderId) || DEFAULT_GDRIVE_FOLDER_ID;
+      const raw = safeStorageGet(LS_KEY_GDRIVE_CFG);
+      let saved = {};
+      if (raw) {
+        try { saved = JSON.parse(raw) || {}; } catch {}
+      }
+      return {
+        clientId: (deployClientId || saved.clientId || '').trim(),
+        folderId: (saved.folderId || deployFolderId || DEFAULT_GDRIVE_FOLDER_ID).trim()
+      };
+    }
+
+    function saveGDriveConfig(clientId, folderId) {
+      safeStorageSet(LS_KEY_GDRIVE_CFG, JSON.stringify({
+        clientId: (clientId || '').trim(),
+        folderId: (folderId || DEFAULT_GDRIVE_FOLDER_ID).trim()
+      }));
+    }
+
+    function getImportedDriveMap() {
+      const raw = safeStorageGet(LS_KEY_GDRIVE_IMPORTED);
+      if (!raw) return {};
+      try { return JSON.parse(raw) || {}; } catch { return {}; }
+    }
+
+    function markDriveFileImported(fileId, fileName, deckTitle) {
+      const map = getImportedDriveMap();
+      map[fileId] = { name: fileName, deckTitle: deckTitle || fileName, importedAt: Date.now() };
+      safeStorageSet(LS_KEY_GDRIVE_IMPORTED, JSON.stringify(map));
+    }
+
+    async function importDeckFromParsedZip(zip, data, slideFiles, subjectName, deckTitle, onProgress) {
+      let subj = appData.subjects.find(s => s.name.toLowerCase() === subjectName.toLowerCase());
+      if (!subj) {
+        subj = { id: 'subj_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6), name: subjectName, created_at: Date.now() };
+        appData.subjects.push(subj);
+        if (mode === 'supabase' && supaClient && supaUser) {
+          await supaClient.from('subjects').insert({ id: subj.id, user_id: supaUser.id, name: subj.name, created_at: subj.created_at });
+        }
+      }
+
+      const deckId = 'deck_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+      const newDeck = {
+        id: deckId,
+        subject_id: subj.id,
+        title: deckTitle,
+        source_document: data.source_document || '',
+        attempt_count: 0,
+        created_at: Date.now()
+      };
+      appData.decks.unshift(newDeck);
+      if (mode === 'supabase' && supaClient && supaUser) {
+        await supaClient.from('decks').insert({ ...newDeck, user_id: supaUser.id });
+      }
+
+      const slideKeyMap = {};
+      for (let i = 0; i < slideFiles.length; i++) {
+        const relPath = slideFiles[i];
+        const filename = relPath.split('/').pop();
+        const storedKey = `${deckId}/${filename}`;
+        slideKeyMap[relPath] = storedKey;
+
+        if (mode === 'supabase' && supaClient && supaUser) {
+          const blob = await zip.file(relPath).async('blob');
+          await supaClient.storage.from('slide-images').upload(`${supaUser.id}/${storedKey}`, blob, { upsert: true });
+        } else {
+          const b64 = await zip.file(relPath).async('base64');
+          const ext = filename.split('.').pop().toLowerCase();
+          const mime = ext === 'png' ? 'image/png' : ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : 'image/webp';
+          appData.slides[storedKey] = `data:${mime};base64,${b64}`;
+        }
+        if (onProgress) {
+          onProgress(Math.round(((i + 1) / Math.max(1, slideFiles.length + 1)) * 85));
+        }
+      }
+
+      const newQuestions = (data.questions || []).map((q, idx) => ({
+        id: `${deckId}_q_${idx + 1}`,
+        deck_id: deckId,
+        type: q.type === 'clinical' ? 'clinical' : 'theory',
+        order_index: q.order_index || idx + 1,
+        question: q.question,
+        options: q.options,
+        correct_key: q.correct_key,
+        slide_key: q.slide_image ? (slideKeyMap[q.slide_image] || '') : '',
+        slide_label: q.slide_label || '',
+        explanation: q.explanation || {}
+      }));
+      appData.questions.push(...newQuestions);
+
+      if (mode === 'supabase' && supaClient && supaUser && newQuestions.length > 0) {
+        const rows = newQuestions.map(q => ({ ...q, user_id: supaUser.id }));
+        await supaClient.from('questions').insert(rows);
+      } else {
+        persistLocalData();
+      }
+      if (onProgress) onProgress(100);
+      return newQuestions.length;
+    }
+
+    function requestGDriveToken(clientId) {
+      return new Promise((resolve, reject) => {
+        if (!window.google || !window.google.accounts || !window.google.accounts.oauth2) {
+          reject(new Error('Thư viện đăng nhập Google chưa tải xong, hãy thử lại sau vài giây.'));
+          return;
+        }
+        const tokenClient = window.google.accounts.oauth2.initTokenClient({
+          client_id: clientId,
+          scope: 'https://www.googleapis.com/auth/drive.readonly',
+          callback: (resp) => {
+            if (resp && resp.access_token) {
+              gdriveAccessToken = resp.access_token;
+              resolve(resp.access_token);
+            } else {
+              reject(new Error((resp && resp.error_description) || (resp && resp.error) || 'Không lấy được quyền truy cập Google Drive.'));
+            }
+          }
+        });
+        tokenClient.requestAccessToken({ prompt: gdriveAccessToken ? '' : 'consent' });
+      });
+    }
+
+    async function openGDriveModal() {
+      document.getElementById('gdrive-modal').classList.remove('hidden');
+      document.getElementById('gdrive-progress-wrap').classList.add('hidden');
+      const cfg = getSavedGDriveConfig();
+      const setupBox = document.getElementById('gdrive-setup-box');
+      if (!cfg.clientId) {
+        setupBox.classList.remove('hidden');
+        document.getElementById('gdrive-modal-client-id').value = '';
+        document.getElementById('gdrive-status-text').textContent = 'Nhập Google OAuth Client ID để bắt đầu kết nối.';
+        document.getElementById('gdrive-file-list').innerHTML = '';
+        document.getElementById('btn-gdrive-import-all').disabled = true;
+        if (window.lucide) lucide.createIcons();
+        return;
+      }
+      setupBox.classList.add('hidden');
+      await scanGDriveFolder();
+    }
+
+    function closeGDriveModal() {
+      document.getElementById('gdrive-modal').classList.add('hidden');
+    }
+
+    async function scanGDriveFolder() {
+      const cfg = getSavedGDriveConfig();
+      if (!cfg.clientId) {
+        document.getElementById('gdrive-setup-box').classList.remove('hidden');
+        return;
+      }
+      const statusEl = document.getElementById('gdrive-status-text');
+      const listEl = document.getElementById('gdrive-file-list');
+      statusEl.textContent = 'Đang kết nối Google Drive (chỉ đọc)...';
+      listEl.innerHTML = '<div class="py-10 text-center text-xs text-slate-500">Đang quét file .zip trong thư mục học này học kia...</div>';
+
+      try {
+        if (!gdriveAccessToken) {
+          await requestGDriveToken(cfg.clientId);
+        }
+        const q = encodeURIComponent(`'${cfg.folderId}' in parents and trashed = false and name contains '.zip'`);
+        const url = `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name,size,modifiedTime)&orderBy=modifiedTime desc&pageSize=50`;
+        let res = await fetch(url, { headers: { Authorization: `Bearer ${gdriveAccessToken}` } });
+        if (res.status === 401) {
+          gdriveAccessToken = '';
+          await requestGDriveToken(cfg.clientId);
+          res = await fetch(url, { headers: { Authorization: `Bearer ${gdriveAccessToken}` } });
+        }
+        if (!res.ok) {
+          const errText = await res.text();
+          throw new Error(`Drive API (${res.status}): ${errText.slice(0, 160)}`);
+        }
+        const json = await res.json();
+        gdriveFilesCache = json.files || [];
+        renderGDriveFileList();
+      } catch (err) {
+        statusEl.textContent = 'Chưa kết nối được Google Drive.';
+        listEl.innerHTML = `<div class="p-4 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700">${escapeHtml(err.message)}</div>`;
+        document.getElementById('btn-gdrive-import-all').disabled = true;
+      }
+    }
+
+    function renderGDriveFileList() {
+      const listEl = document.getElementById('gdrive-file-list');
+      const statusEl = document.getElementById('gdrive-status-text');
+      const importedMap = getImportedDriveMap();
+      const newFiles = gdriveFilesCache.filter(f => !importedMap[f.id]);
+
+      statusEl.textContent = `Tìm thấy ${gdriveFilesCache.length} file .zip (${newFiles.length} file mới chưa nhập).`;
+      document.getElementById('btn-gdrive-import-all').disabled = newFiles.length === 0;
+
+      if (gdriveFilesCache.length === 0) {
+        listEl.innerHTML = '<div class="py-10 text-center text-xs text-slate-500">Thư mục <strong>học này học kia</strong> hiện chưa có file <code>.zip</code> nào.</div>';
+        return;
+      }
+
+      listEl.innerHTML = gdriveFilesCache.map(f => {
+        const isImported = Boolean(importedMap[f.id]);
+        const sizeMb = f.size ? (Number(f.size) / (1024 * 1024)).toFixed(2) + ' MB' : '—';
+        const modDate = f.modifiedTime ? new Date(f.modifiedTime).toLocaleDateString('vi-VN') : '';
+        return `
+          <div class="p-3.5 rounded-xl border ${isImported ? 'border-slate-200 bg-slate-50/70' : 'border-leaf-200 bg-leaf-50/50'} flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="font-semibold text-xs text-leaf-900 truncate">${escapeHtml(f.name)}</span>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold ${isImported ? 'bg-slate-200 text-slate-700' : 'bg-leaf-600 text-white'}">
+                  ${isImported ? 'Đã nhập' : 'Mới'}
+                </span>
+              </div>
+              <div class="text-[11px] text-slate-500 mt-1">${sizeMb} · Cập nhật ${modDate}</div>
+            </div>
+            <button type="button" data-gdrive-import-id="${escapeAttr(f.id)}"
+              class="btn-gdrive-import-one px-3.5 py-2 rounded-lg ${isImported ? 'border border-leaf-200 bg-white text-leaf-800 hover:bg-leaf-50' : 'bg-leaf-700 hover:bg-leaf-800 text-white'} text-xs font-semibold transition shrink-0">
+              ${isImported ? 'Nhập lại' : 'Nhập lên web'}
+            </button>
+          </div>
+        `;
+      }).join('');
+
+      listEl.querySelectorAll('.btn-gdrive-import-one').forEach(btn => {
+        btn.addEventListener('click', () => importOneGDriveFile(btn.dataset.gdriveImportId));
+      });
+    }
+
+    async function importOneGDriveFile(fileId, keepModalOpen = false) {
+      const fileMeta = gdriveFilesCache.find(f => f.id === fileId);
+      if (!fileMeta) return;
+
+      const progWrap = document.getElementById('gdrive-progress-wrap');
+      const progLabel = document.getElementById('gdrive-progress-label');
+      const progBar = document.getElementById('gdrive-progress-bar');
+      const progPct = document.getElementById('gdrive-progress-pct');
+
+      progWrap.classList.remove('hidden');
+      progLabel.textContent = `Đang tải "${fileMeta.name}" từ Google Drive...`;
+      progBar.style.width = '10%';
+      progPct.textContent = '10%';
+
+      try {
+        const res = await fetch(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}?alt=media`, {
+          headers: { Authorization: `Bearer ${gdriveAccessToken}` }
+        });
+        if (!res.ok) throw new Error(`Không tải được file (${res.status})`);
+        const blob = await res.blob();
+        const zip = await JSZip.loadAsync(blob);
+        const backupFile = zip.file('backup.json');
+        const deckFile = zip.file('deck.json');
+
+        if (backupFile) {
+          progLabel.textContent = `Đang khôi phục bản sao lưu "${fileMeta.name}"...`;
+          const parsed = JSON.parse(await backupFile.async('string'));
+          await restoreFromBackupZip(zip, parsed, (p) => {
+            progBar.style.width = `${p}%`;
+            progPct.textContent = `${p}%`;
+          });
+          markDriveFileImported(fileId, fileMeta.name, 'Sao lưu hệ thống');
+          showToast(`Đã khôi phục "${fileMeta.name}" từ Drive!`);
+        } else if (deckFile) {
+          const deckJson = JSON.parse(await deckFile.async('string'));
+          const slideFiles = Object.keys(zip.files).filter(k => k.startsWith('slides/') && !zip.files[k].dir);
+          const subjectName = (deckJson.subject_name || 'Chưa phân môn').trim();
+          const deckTitle = (deckJson.deck_title || fileMeta.name.replace(/\.zip$/i, '')).trim();
+          progLabel.textContent = `Đang nạp "${deckTitle}" (${slideFiles.length} ảnh)...`;
+          const count = await importDeckFromParsedZip(zip, deckJson, slideFiles, subjectName, deckTitle, (p) => {
+            progBar.style.width = `${p}%`;
+            progPct.textContent = `${p}%`;
+          });
+          markDriveFileImported(fileId, fileMeta.name, deckTitle);
+          showToast(`Đã nhập "${deckTitle}" (${count} câu) từ Google Drive!`);
+        } else {
+          throw new Error('File .zip không chứa deck.json hoặc backup.json.');
+        }
+
+        renderGDriveFileList();
+        renderAllMeta();
+        if (currentView === 'dashboard') renderDashboard();
+        if (currentView === 'library') renderLibrary();
+        if (!keepModalOpen) {
+          setTimeout(() => {
+            progWrap.classList.add('hidden');
+          }, 800);
+        }
+      } catch (err) {
+        showToast('Lỗi đồng bộ file từ Drive: ' + err.message, 'error');
+        progWrap.classList.add('hidden');
+      }
+    }
+
+    async function importAllNewGDriveFiles() {
+      const importedMap = getImportedDriveMap();
+      const newFiles = gdriveFilesCache.filter(f => !importedMap[f.id]);
+      if (newFiles.length === 0) return;
+      document.getElementById('btn-gdrive-import-all').disabled = true;
+      for (const f of newFiles) {
+        await importOneGDriveFile(f.id, true);
+      }
+      document.getElementById('gdrive-progress-wrap').classList.add('hidden');
+      showToast(`Đã hoàn tất đồng bộ ${newFiles.length} bộ đề mới từ Google Drive!`);
+    }
+
+    // =========================================================================
     // 9. KHỞI TẠO & GẮN SỰ KIỆN
     // =========================================================================
     async function bootApp() {
@@ -2144,6 +2576,31 @@
       document.getElementById('card-goto-wrong').addEventListener('click', () => switchView('wrong'));
       document.getElementById('btn-practice-wrong').addEventListener('click', startWrongSession);
       document.getElementById('btn-open-import').addEventListener('click', openImportModal);
+      document.getElementById('btn-open-gdrive').addEventListener('click', openGDriveModal);
+      document.getElementById('btn-hero-gdrive').addEventListener('click', openGDriveModal);
+      document.getElementById('btn-close-gdrive').addEventListener('click', closeGDriveModal);
+      document.getElementById('btn-gdrive-refresh').addEventListener('click', scanGDriveFolder);
+      document.getElementById('btn-gdrive-import-all').addEventListener('click', importAllNewGDriveFiles);
+      document.getElementById('btn-gdrive-save-connect').addEventListener('click', async () => {
+        const cid = document.getElementById('gdrive-modal-client-id').value.trim();
+        if (!cid) { showToast('Vui lòng dán Google OAuth Client ID.', 'error'); return; }
+        const cfg = getSavedGDriveConfig();
+        saveGDriveConfig(cid, cfg.folderId);
+        document.getElementById('gdrive-setup-box').classList.add('hidden');
+        await scanGDriveFolder();
+      });
+      document.getElementById('btn-settings-save-gdrive').addEventListener('click', () => {
+        const cid = document.getElementById('set-gdrive-client-id').value.trim();
+        const fid = document.getElementById('set-gdrive-folder-id').value.trim() || DEFAULT_GDRIVE_FOLDER_ID;
+        saveGDriveConfig(cid, fid);
+        showToast('Đã lưu cấu hình Google Drive (chỉ đọc)!');
+      });
+      document.getElementById('btn-settings-open-gdrive').addEventListener('click', () => {
+        const cid = document.getElementById('set-gdrive-client-id').value.trim();
+        const fid = document.getElementById('set-gdrive-folder-id').value.trim() || DEFAULT_GDRIVE_FOLDER_ID;
+        if (cid) saveGDriveConfig(cid, fid);
+        openGDriveModal();
+      });
       document.getElementById('btn-hero-import').addEventListener('click', openImportModal);
       document.getElementById('btn-lib-import').addEventListener('click', openImportModal);
       document.getElementById('btn-restore-backup').addEventListener('click', openImportModal);
